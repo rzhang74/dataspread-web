@@ -260,6 +260,60 @@ zss.CellBlockCtrl = zk.$extends(zk.Widget, {
 			this.range = new zss.Range(oldRange.left, oldRange.top, width, height, true);
 		}
 	},
+    createFiller_: function (dir, tRow, lCol, bRow, rCol) {
+        var sheet = this.sheet,
+            data = sheet._wgt._cacheCtrl.getSelectedSheet(),
+            block = this,
+            cr = this.range,
+            rs = this.rows,
+            isNewRow = false,
+            isTop = 'north' == dir,
+            isBtm = 'south' == dir,
+            isJump = 'jump' == dir,
+            isVer = isTop || isBtm || isJump,
+            isLeft = 'west' == dir,
+            isRight = 'east' == dir;
+
+        console.log("cell block--in create filler");
+        for (var r = tRow, j = 0; r <= bRow; r++) {
+            var row = isVer ? new zss.Row(sheet, block, r, data) : this.getRow(r),
+                html = isVer ? row.getHtmlPrologHalf() : '';
+            for (var c = lCol, i = 0;  c <= rCol; c++) {
+                var cell = new zss.Cell(sheet, block, r, c, data);
+                if (isLeft) {
+                    row.insertCell(i++, cell); //row has been attach to DOM tree
+                } else if (isRight) {
+                    row.appendCell(cell); //row has been attach to DOM tree
+                } else if (isVer) {
+                    row.appendCell(cell, true); //not attach to DOM tree yet
+                    html += cell.getHtml();
+                }
+            }
+            if (isVer)
+                html += row.getHtmlEpilogHalf();
+            else if (row._prepareAutoFilterBtns)
+                row._prepareAutoFilterBtns(); //ZSS-953
+
+            if (isBtm)
+                this.appendRow(row, html, true);
+            else if (isTop) {
+                this.insertRow(j++, row, html, true);
+            }
+        }
+        //ZSS 125: wrap text processed on row.bind_, within appendRow / insertRow
+        delete sheet._wrapRange;
+
+        var r = this.range,
+            width = rCol - lCol + 1;
+        if (isLeft)
+            r.extendLeft(width);
+        else if (isRight)
+            r.extendRight(width);
+        else if (isJump) {
+            var oldRange = r;
+            this.range = new zss.Range(oldRange.left, oldRange.top, width, height, true);
+        }
+    },
 	/**
 	 * Sets rows's width position index
 	 * @param int col the column

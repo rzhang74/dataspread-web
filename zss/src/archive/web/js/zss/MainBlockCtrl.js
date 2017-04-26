@@ -37,7 +37,9 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 	 * Create cells, frozen cells and associated headers
 	 */
 	create_: function (dir, tRow, lCol, bRow, rCol, createFrozenOnly) {
+	    console.log("------In MainBlockCtrl:_create-------line 40");
 		var sht = this.sheet;
+		var t1 = performance.now();
 		switch (dir) {
 		case 'east':
 		case 'west':
@@ -45,24 +47,43 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 			break;
 		case 'north':
 		case 'south':
+            console.log("created south");
 			sht.lp.create_(dir, tRow, bRow, 0, sht._wgt.getColumnFreeze());
-			break;
+
+            break;
 		case 'jump':
 			sht.tp.create_(dir, lCol, rCol, 0, sht._wgt.getRowFreeze());
 			sht.lp.create_(dir, tRow, bRow, 0, sht._wgt.getColumnFreeze());
 			break;
 		}
+
+
+        var tf1 = performance.now();
 		if (!createFrozenOnly)
-			this.$supers(zss.MainBlockCtrl, 'create_', [dir, tRow, lCol, bRow, rCol]); //create cells;
+            this.$supers(zss.MainBlockCtrl, 'create_', [dir, tRow, lCol, bRow, rCol]); //create cells;
+        var tf2 = performance.now();
+        console.log("------createFrozenOnly-------line 63, time: " + (tf2-tf1) + " ms");
+		//console.log("call fixsize 57");
 		sht.dp._fixSize(this);
+        var t2 = performance.now();
+
+        console.log("------Out MainBlockCtrl:_create, time: " + (t2-t1) + " ms-------line 68");
 	},
 	_recheckVisible: function () {
+        console.log("-----In MainBlockCtrl:_recheckVisible()-----");
+        var t_r1 = performance.now();
 		var self = this,
 			sheet = this.sheet;
 		clearTimeout(self._timeoutId);
 		self._timeoutId = setTimeout(function () {
+            console.log("----MainBlockCtrl:Calling loadForVisible() line 64---");
+            //var t0 = performance.now();
 			self.loadForVisible();
+            //var t1 = performance.now();
+            //console.log("Call to self load took " + (t1 - t0) + " milliseconds.");
 		}, 50);
+        var t_r2 = performance.now();
+        console.log("-----Out MainBlockCtrl:_recheckVisible()-----"+(t_r2-t_r1)+" ms");
 	},
 	/**
 	 * Create cells from cache
@@ -71,6 +92,8 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 	 * @param int prune reserve when prune, -1 means don't prune, 0 means don't reserve 
 	 */
 	_createCellsIfCached: function (dir, size, jump) {
+		console.log("----In MainBlockCtrl:_createCellsIfCached---");
+        var t_cache1 = performance.now();
 		var sheet = this.sheet,
 			wgt = sheet._wgt,
 			cr = this.range,
@@ -79,6 +102,8 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 			vr = zss.SSheetCtrl._getVisibleRange(sheet);
 		switch (dir) {
 		case 'south':
+            console.log("_createCellsIfCached:south");
+            //var t1 = performance.now();
 			var tRow = cr.bottom + 1,
 				lCol = cr.left,
 				rCol = cr.right,
@@ -86,7 +111,11 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 				cache = false;
 			bRow = Math.min(bRow, sheet.maxRows - 1);
 			if (ar.containsRange(tRow, lCol, bRow, rCol)) {
+				console.log("Call _create 97");
+				var tc_1 = performance.now();
 				this.create_(dir, tRow, lCol, bRow, rCol);
+				var tc_2 = performance.now();
+                console.log("Call to _create (@line 97):south took " + (tc_2 - tc_1) + " milliseconds.");
 				var size = this.range.size(),
 					prune = size > maxCellSize;
 				//TODO: minimize prune size
@@ -95,8 +124,11 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 				}
 				cache = true;
 			}
+           // var t2 = performance.now();
+            //console.log("Call to self _createCellsIfCached:south took " + (t2 - t1) + " milliseconds.");
 			break;
 		case 'north':
+            console.log("_createCellsIfCached:north");
 			var bRow = cr.top - 1,
 				lCol = cr.left,
 				rCol = cr.right,
@@ -116,6 +148,7 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 			}
 			break;
 		case 'west':
+            console.log("_createCellsIfCached:west");
 			var tRow = cr.top,
 				bRow = cr.bottom,
 				rCol = cr.left - 1,
@@ -135,6 +168,7 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 			}
 			break;
 		case 'east':
+            console.log("_createCellsIfCached:east");
 			var tRow = cr.top,
 				bRow = cr.bottom,
 				lCol = cr.right + 1,
@@ -153,12 +187,18 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 			}
 			break;
 		}
+
 		if (cache) {
-			this.sheet.dp._fixSize(this);
-			this._recheckVisible(); //will sendSyncblock 
+            this.sheet.dp._fixSize(this);
+			console.log("call recheck visible 162");
+			this._recheckVisible(); //will sendSyncblock
+            var t_cache2 = performance.now();
+            console.log("-----Out MainBlockCtrl:_createCellsIfCached. cache==true.----time: "+(t_cache2-t_cache1)+" ms");
 			return true; //use cache
 		}
-		return false;
+        var t_cache2 = performance.now();
+        console.log("-----Out MainBlockCtrl:_createCellsIfCached. cache==false.----time: "+(t_cache2-t_cache1)+" ms");
+        return false;
 	},
 	/**
 	 * Handle scroll on spreadsheet.
@@ -171,7 +211,10 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 			sheet._snapActiveBlock();
 			alwaysjump = true; 
 		}*/
-		sheet._wgt._sheetScrolled = true;
+		console.log("--------in MainBlockCtrl:doScroll-------------");
+        var t1 = performance.now();
+
+        sheet._wgt._sheetScrolled = true;
 		if (vertical) {
 			var ctop = this.range.top,
 				cbottom = this.range.bottom;
@@ -180,26 +223,32 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 					return; //the visible is be contained.
 				var hgh = range.bottom - cbottom + 1;
 				//neighbor south
+				console.log("check if _createCellsIfCached for south");
 				if (hgh > 0 && !this._createCellsIfCached('south', hgh)) {
+                    console.log("in doScroll--south 195--load from db");
 					sheet.activeBlock.loadCell(range.bottom, range.left, (alwaysjump ? -1 : 20), null, alwaysjump);
 				}
 			} else if(ctop >= range.top && ctop <= range.bottom) {
 				var hgh = ctop - range.top + 1;
 				//neighbor north;
 				if (!this._createCellsIfCached('north', hgh)) {
+                    console.log("in doScroll--north 202");
 					sheet.activeBlock.loadCell(range.top,range.left, (alwaysjump ? -1 : 20), null, alwaysjump);
 				}
 			} else if(range.top > cbottom) {
 				//jump south
 				if (!this._createCellsIfCached('south', range.height, true)) {
+                    console.log("in doScroll--south 207");
 					sheet.activeBlock.loadCell(range.bottom, range.left,-1, null, alwaysjump);
 				}
 			} else if(ctop > range.bottom) {
 				//jump north;
 				if (!this._createCellsIfCached('north', range.height, true)) {
+                    console.log("in doScroll--north 214");
 					sheet.activeBlock.loadCell(range.top, range.left, -1, null, alwaysjump);
 				}
 			} else{
+
 				return;
 			}
 		} else {
@@ -233,6 +282,10 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 				return;
 			}
 		}
+
+		var t2 = performance.now();
+
+		console.log("------Out MainBlockCtrl:doScroll-------time: "+(t2-t1)+" ms");
 	},
 	_sendOnCellFetch: function(token, type, direction, fetchLeft, fetchTop, fetchWidth, fetchHeight, vrange) {
 		var sheet = this.sheet;
@@ -297,6 +350,8 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 	 * @return true if already loaded, false if need to asynchronize loading.
 	 */
 	loadCell: function (row, col, pruneres, callbackfn, alwaysjump) {
+
+		console.log("---------In MainBlockCtrl:load cell----------");
 		var cleft = this.range.left,
 			ctop = this.range.top,
 			cw = this.range.width,
@@ -331,6 +386,7 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 						block._lastDir = null;
 						block.loadstate = zss.MainBlockCtrl.IDLE;
 						if (callbackfn) callbackfn();
+                        console.log("Calling load cell 335");
 						block.loadForVisible();
 					});
 					this._sendOnCellFetch(token, "jump", "west", col, row, -1, -1, range);
@@ -359,6 +415,7 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 						}
 						block.loadstate = zss.MainBlockCtrl.IDLE;
 						if(callbackfn) callbackfn();
+                        console.log("Calling load cell 364");
 						block.loadForVisible();
 					});
 					this._sendOnCellFetch(token, "neighbor", "west", x, y, w, h, range);
@@ -376,6 +433,7 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 						block._lastDir = null;
 						block.loadstate = zss.MainBlockCtrl.IDLE;
 						if (callbackfn) callbackfn();
+                        console.log("Calling load cell 382");
 						block.loadForVisible();
 					});
 					this._sendOnCellFetch(token, "jump", "east", col, row, -1, -1, range);
@@ -405,6 +463,7 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 						}
 						block.loadstate = zss.MainBlockCtrl.IDLE;
 						if (callbackfn) callbackfn();
+                        console.log("Calling load cell 412");
 						block.loadForVisible();
 					});
 					this._sendOnCellFetch(token, "neighbor", "east", x, y, w, h, range);
@@ -423,6 +482,7 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 						block._lastDir = null;
 						block.loadstate = zss.MainBlockCtrl.IDLE;
 						if (callbackfn) callbackfn();
+                        console.log("Calling load cell 431");
 						block.loadForVisible();
 					});
 					this._sendOnCellFetch(token, "jump", "north", col, row, -1, -1, range);
@@ -450,7 +510,7 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 						}
 						sheet.activeBlock.loadstate = zss.MainBlockCtrl.IDLE;
 						if (callbackfn) callbackfn();
-
+                        console.log("Calling load cell 459");
 						sheet.activeBlock.loadForVisible();
 					});
 					this._sendOnCellFetch(token, "neighbor", "north", x, y, w, h, range);
@@ -469,6 +529,7 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 						block._lastDir = null;
 						block.loadstate = zss.MainBlockCtrl.IDLE;
 						if (callbackfn) callbackfn();
+                        console.log("Calling load cell 478");
 						block.loadForVisible();
 					});
 					this._sendOnCellFetch(token, "jump", "south", col, row, -1, -1, range);
@@ -497,6 +558,7 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 						}
 						block.loadstate = zss.MainBlockCtrl.IDLE;
 						if (callbackfn) callbackfn();
+                        console.log("Calling load cell 506");
 						block.loadForVisible();
 					});
 					this._sendOnCellFetch(token, "neighbor", "south", x, y, w, h, range);
@@ -509,6 +571,7 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 				block.loadstate = zss.MainBlockCtrl.IDLE;
 				if(callbackfn) callbackfn();
 				//local variable will be destoryed, don't use local.loadForVisible
+                console.log("Calling load cell 520");
 				block.loadForVisible();
 			});
 
@@ -530,6 +593,8 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 			}
 			this._sendOnCellFetch(token, "jump", direction, col, row, -1, -1, range);
 		}
+
+		console.log("------Out MainBlockCtrl::load cell------");
 		return false;
 		
 	},
@@ -675,6 +740,8 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 	 * @param zss.Range 
 	 */
 	loadForVisible: function (vrange) {
+	    console.log("-------In MainBlockCtrl.js: loadForVisible()---------");
+	    var t_l1 = performance.now();
 		//ZSS-556: prepare filter button after loadForVisible
 		if (!this._loadForVisible(vrange)) {
 			var sheet = this.sheet;
@@ -710,8 +777,15 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 				}
 			}
 		}
+
+        var t_l2 = performance.now();
+
+		console.log("--------Out MainBlockCtrl.js: loadForVisible()-----------time: "+(t_l2-t_l1)+" ms");
 	},
 	_loadForVisible: function (vrange) {
+        console.log("---------In MainBlockCtrl:_loadForVisible----------");
+        var t0 = performance.now();
+
 		var local = this,
 			sheet = this.sheet;
 		if (!sheet) {
@@ -734,7 +808,7 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 		//Two phases
 		//1. create cells from cache if possible
 		//2. fetch data from server
-		
+
 		var tRow = vrange.top,
 			lCol = vrange.left,
 			rCol = vrange.right,
@@ -747,7 +821,8 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 			ar = sheet._wgt._cacheCtrl.getSelectedSheet();
 		
 		//create east from cache
-		if (right + 1 <= rCol) {
+        var te1 = performance.now();
+        if (right + 1 <= rCol) {
 			var createFromCache = false,
 				fRow = sheet._wgt.getRowFreeze();
 			if (ar.containsRange(top, right + 1, bottom, rCol)) {
@@ -766,8 +841,10 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 				bottom = range.bottom;
 			}
 		}
-		
+        var te2 = performance.now();
+        console.log("Call to west cache took " + (te2 - te1) + " milliseconds.");
 		//create west from cache
+        var tw1 = performance.now();
 		if (left - 1 >= lCol) {
 			var createFromCache = false,
 				fRow = sheet._wgt.getRowFreeze();
@@ -783,16 +860,20 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 				bottom = range.bottom;
 			}
 		}
-
+        var tw2 = performance.now();
+        console.log("Call to west cache took " + (tw2 - tw1) + " milliseconds.");
 		//create south from cache
+        var ts1 = performance.now();
 		if (bottom + 1 <= bRow) {
 			var createFromCache = false,
 				fCol = sheet._wgt.getColumnFreeze();
 			if (ar.containsRange(bottom + 1, left, bRow, right)) {
+				console.log("call to create_ 831...for south");
 				this.create_('south', bottom + 1, left, bRow, right);
 				createFromCache = true;
 			} else if (ar.rect.bottom > bottom + 1 && ar.rect.bottom < bRow && ar.containsRange(bottom + 1, left, ar.rect.bottom, right)) {
 				//create partial south from cache
+                console.log("call to create_ 835...for partial south");
 				this.create_('south', bottom + 1, left, ar.rect.bottom, right);
 				createFromCache = true;
 			}
@@ -804,8 +885,10 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 				bottom = range.bottom;
 			}
 		}
-		
+        var ts2 = performance.now();
+        console.log("Call to south cache took " + (ts2 - ts1) + " milliseconds.");
 		//create north from cache
+		var tN1 = performance.now();
 		if (tRow < top) {
 			var createFromCache = false,
 				fCol = sheet._wgt.getColumnFreeze();
@@ -825,7 +908,10 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 				bottom = range.bottom;
 			}
 		}
-		
+        var tN2 = performance.now();
+        console.log("Call to north cache took " + (tN2 - tN1) + " milliseconds.");
+
+
 		if (tRow > bottom || bRow < top || lCol > right || rCol < left) {
 			
 			//visible range not cross this block,  this should invoke a jump 
@@ -833,6 +919,7 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 			this.loadCell(vrange.top, vrange.left, 0, null, true);
 			return true;
 		} else if (!(tRow >= top && lCol >= left && bRow <= bottom && rCol <= right)) {
+            var t2 = performance.now();
 
 			var fetchHeight = fetchWidth = -1,
 				arRight = ar.rect.right,
@@ -849,6 +936,8 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 				fetchWidth = ar.rect.right - right + 1;
 			}
 
+            var t3 = performance.now();
+            console.log("Call to else if (fetch settings) took " + (t3 - t2) + " milliseconds.");
 			var token = zkS.addCallback(function () {
 				//when inital , there is a loadForVisible, 
 				//in this monent, use might click to invalidate this spreadhsheet
@@ -861,19 +950,32 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 				b.loadForVisible();;
 				sheet.dp._fixSize(local);
 			});
+            var t4 = performance.now();
 			this.loadstate = zss.MainBlockCtrl.LOADING;
 			this._sendOnCellFetch(token, "visible", "", -1, -1, fetchWidth, fetchHeight, vrange);
+            var t5 = performance.now();
+            console.log("Call to _sendCellFetch took " + (t5 - t4) + " milliseconds.");
 			return true;
 		}
+        var t1 = performance.now();
+       // console.log("Call before fixSize took " + (t1 - t0) + " milliseconds.");
 		sheet.dp._fixSize(this);
 
 		var deferLoader = sheet.deferLoader;
 		if (!deferLoader) {
+            console.log("loading deferloader");
 			deferLoader = sheet.deferLoader = new zss.DeferLoader(sheet);
 		}
+        var t2 = performance.now();
 		deferLoader.asyncRun(); //check if need to load data later
-		
+        var t3 = performance.now();
+        //console.log("Call to defer.asyncRun took " + (t3 - t2) + " milliseconds.");
+        var t4 = performance.now();
 		sheet.sendSyncblock(true);
+        var t5 = performance.now();
+        //console.log("Call to defer.asyncRun took " + (t5 - t4) + " milliseconds.");
+        t1 = performance.now();
+        console.log("---------Out MainBlockCtrl: _loadForVisible()----------time: "+(t1 - t0) + " ms");
 		return false;
 	},
 	/**

@@ -48,7 +48,7 @@ zss.ScrollPanel = zk.$extends(zk.Object, {
 		this.minWidth = dtcmp.offsetWidth;
 		wgt.domListen_(scrollPanel, 'onScroll', this.proxy(this._doScrolling))
 			.domListen_(scrollPanel, 'onMouseDown', this.proxy(this._doMousedown));
-		
+		console.log("scroll panel mouse down");
 		jq(sheet.cp.$n()).on('mousewheel', this.proxy(this._doMouseWheel));
 		jq(sheet.lp.$n()).on('mousewheel', this.proxy(this._doMouseWheel));
 		jq(sheet.tp.$n()).on('mousewheel', this.proxy(this._doMouseWheel));
@@ -192,7 +192,12 @@ zss.ScrollPanel = zk.$extends(zk.Object, {
 		this._doScroll(false);
 	},
 	_doScroll: function (vertical) {
+		console.log("--------In ScrollPanel.js:_doScroll()-------");
+		var t1 =  performance.now();
 		this.sheet.activeBlock.doScroll(vertical);
+		var t2 = performance.now();
+
+		console.log("--------Out ScrollPanel.js:_doScroll()-------time:"+(t2-t1)+" ms");
 	},
 	_getMaxScrollLeft: function (dtcmp, sccmp) {
 		return (dtcmp.offsetWidth - sccmp.offsetWidth) + zss.Spreadsheet.scrollWidth;

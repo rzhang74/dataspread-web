@@ -87,6 +87,7 @@ zss.DataPanel = zk.$extends(zk.Object, {
 		jq(this.comp).css('width', jq.px0(this.width));
 	},
 	_fixSize: function (block) {
+        var t2 = performance.now();
 		var self = this,
 			wgt = this._wgt,
 			sheet = this.sheet,
@@ -111,6 +112,8 @@ zss.DataPanel = zk.$extends(zk.Object, {
 		jq(self.padcomp).css('height', jq.px0(self.paddingt));
 		sheet.tp._updateLeftPadding(pdl);
 		sheet.lp._updateTopPadding(self.paddingt);
+        var t3 = performance.now();
+        //console.log("Call to _fixsize took " + (t3 - t2) + " milliseconds.");
 	},
 	/**
 	 * Returns whether is focus on frozen area or not.
@@ -747,6 +750,7 @@ zss.DataPanel = zk.$extends(zk.Object, {
 
 			// ZSS-664: scroll to next page
 			sheet.sp.scrollToVisible(oldRange.bottom, -1, null, zss.SCROLL_DIR.VERTICAL, zss.SCROLL_POS.TOP);
+            console.log("Calling Data Panel 750");
 			activeBlock.loadForVisible();
 
 			// ZSS-664: do not move focus if not allow to select locked cells

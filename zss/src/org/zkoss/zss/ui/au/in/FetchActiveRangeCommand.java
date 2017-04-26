@@ -41,40 +41,53 @@ public class FetchActiveRangeCommand extends AbstractCommand implements Command 
 		if (comp == null)
 			throw new UiException(MZk.ILLEGAL_REQUEST_COMPONENT_REQUIRED,
 					FetchActiveRangeCommand.class);
-		
+		System.out.println("In fetch active range");
+
+		long start =  System.currentTimeMillis();
 		final Map data = (Map) request.getData();
+		long dataFetchTime = System.currentTimeMillis()-start;
 		if (data == null || data.size() != 5)
 			throw new UiException(MZk.ILLEGAL_REQUEST_WRONG_DATA, new Object[] {Objects.toString(data), SelectSheetCommand.class });
-		
+
+		start =  System.currentTimeMillis();
 		Spreadsheet spreadsheet = ((Spreadsheet) comp);
 		String sheetId = (String) data.get("sheetId");
 		int left = (Integer) data.get("left");
 		int right = (Integer) data.get("right");
 		int top = (Integer) data.get("top");
 		int bottom = (Integer) data.get("bottom");
-		
+		for(Object s:data.keySet())
+			System.out.println(s.toString());
 		SSheet sheet = spreadsheet.getSelectedSSheet();
-		
+		long sheetUpdateEnd=0,sheetSet=0;
 		if (sheetId.equals(sheet.getId())) {
 			final SpreadsheetCtrl spreadsheetCtrl = ((SpreadsheetCtrl) spreadsheet.getExtraCtrl());
-			
+
 			FreezeInfoLoader freezeInfo = spreadsheetCtrl.getFreezeInfoLoader();
-			
+
 			JSONObject mainBlock = spreadsheetCtrl.getRangeAttrs(sheet, SpreadsheetCtrl.Header.BOTH, SpreadsheetCtrl.CellAttribute.ALL,
 					left, top, right, bottom);
 			int fzc = freezeInfo.getColumnFreeze(sheet);
 			int fzr = freezeInfo.getRowFreeze(sheet);
 			if (fzc > -1) {
-				mainBlock.put("leftFrozen", 
-						spreadsheetCtrl.getRangeAttrs(sheet, SpreadsheetCtrl.Header.BOTH, SpreadsheetCtrl.CellAttribute.ALL, 
+				mainBlock.put("leftFrozen",
+						spreadsheetCtrl.getRangeAttrs(sheet, SpreadsheetCtrl.Header.BOTH, SpreadsheetCtrl.CellAttribute.ALL,
 								0, top, fzc, bottom));
 			}
 			if (fzr > -1) {
-				mainBlock.put("topFrozen", 
-						spreadsheetCtrl.getRangeAttrs(sheet, SpreadsheetCtrl.Header.BOTH, SpreadsheetCtrl.CellAttribute.ALL, left, 
+				mainBlock.put("topFrozen",
+						spreadsheetCtrl.getRangeAttrs(sheet, SpreadsheetCtrl.Header.BOTH, SpreadsheetCtrl.CellAttribute.ALL, left,
 								0, right, fzr));
 			}
+			sheetSet = System.currentTimeMillis()-start;
+			long sheetUpdateStart = System.currentTimeMillis();
 			spreadsheet.smartUpdate("activeRangeUpdate", mainBlock);
+			sheetUpdateEnd = System.currentTimeMillis()-sheetUpdateStart;
 		}
+
+		long sheetSet_Update = System.currentTimeMillis()-start;
+
+		System.out.println("Data Load:"+ dataFetchTime +", Sheet Set and Update: "+sheetSet_Update+", Sheet Set: "+sheetSet+", Sheet Update: "+sheetUpdateEnd);
+
 	}
 }

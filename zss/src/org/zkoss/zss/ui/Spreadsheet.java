@@ -889,8 +889,8 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 	
 	/**
 	 * Gets the importer that import the file in the specified src (
-	 * {@link #getSrc}) to {@link XBook} data model. The default importer is
-	 * {@link ExcelImporter}.
+	 * {@link #getSrc}) to {@link } data model. The default importer is
+	 * {@link }.
 	 * 
 	 * @return the importer
 	 * @deprecated since 3.0.0 , use {@link #getImporter()}
@@ -5289,6 +5289,7 @@ public class Spreadsheet extends XulElement implements Serializable, AfterCompos
 		
 		Command command = InnerEvts.getCommand(cmd);
 		if (command != null) {
+			System.out.println(cmd);
 			command.process(request);
 			return;
 		}

@@ -396,17 +396,25 @@ zss.LeftPanel = zk.$extends(zss.Panel, {
 	 * Create cells and associated headers
 	 */
 	create_: function (dir, rowStart, rowEnd, frozenColStart, forzenColEnd, createFrozenOnly) {
+		console.log("---------In leftpanel.js:create_---------");
+        var t1 = performance.now();
 		if (!createFrozenOnly)
 			this.createHeaders_(dir, rowStart, rowEnd);
-		
+		//console.log("dir in create rows from lp: "+dir);
 		var createFrozen = frozenColStart >= 0 && forzenColEnd >= 0;
 		if ('jump' == dir && createFrozen) {
+          //  console.log("creating cells for south--jump");
 			var oldBlock = this.block;
 			this.block = new zss.CellBlockCtrl(this.sheet, rowStart, frozenColStart, rowEnd, forzenColEnd, this.getFrozenData_(), 'left'); // ZSS-404: fixed missed sheet
 			oldBlock ? oldBlock.replaceWidget(this.block) : this.appendChild(this.block);
 		} else if (this.block && createFrozen) {
+			console.log("creating cells for south--for scroll");
+            //this.block.createFiller_(dir, rowStart, frozenColStart, rowEnd, forzenColEnd);
 			this.block.create_(dir, rowStart, frozenColStart, rowEnd, forzenColEnd, this.getFrozenData_());
 		}
+
+        var t2 = performance.now();
+		console.log("----------Out leftpanel.js:create_-------time: "+(t2-t1)+" ms");
 	},
 	initFrozenBlock_: function (sheet, tRow, bRow, data) {
 		var c = sheet.frozenCol;

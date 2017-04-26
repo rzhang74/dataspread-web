@@ -16,9 +16,6 @@ Copyright (C) 2013 Potix Corporation. All Rights Reserved.
 */
 package org.zkoss.zss.model.impl;
 
-import org.model.DBContext;
-import org.model.DBHandler;
-import org.model.LruCache;
 import org.zkoss.lang.Library;
 import org.zkoss.poi.ss.util.CellReference;
 import org.zkoss.poi.ss.util.SheetUtil;
@@ -406,6 +403,7 @@ public class SheetImpl extends AbstractSheetAdv {
 	
 	@Override
 	AbstractCellAdv getCell(int rowIdx, int columnIdx, boolean proxy) {
+		long t1 =  System.currentTimeMillis();
 		CellRegion cellRegion = new CellRegion(rowIdx, columnIdx);
         AbstractCellAdv cell = sheetDataCache.get(cellRegion);
 		if (cell == null) {
@@ -413,6 +411,8 @@ public class SheetImpl extends AbstractSheetAdv {
 			// Cache Data.
 			if (getBook().hasSchema()) {
 				preFetchCells(cellRegion);
+				long t2 = System.currentTimeMillis();
+				System.out.println("Load cell time "+(t2-t1)+" ms");
 				// After prefetch assume this can get a cell.
 				return getCell(rowIdx, columnIdx, proxy);
 			} else {
@@ -435,6 +435,7 @@ public class SheetImpl extends AbstractSheetAdv {
 					return cell;
 			}
 		}
+
 	}
 
 	@Override

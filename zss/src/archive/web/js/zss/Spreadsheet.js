@@ -1102,12 +1102,15 @@ zss.Spreadsheet = zk.$extends(zul.wgt.Div, {
 	 * Fetch active range. Currently fetch north/south/west/south direction
 	 */
 	fetchActiveRange: function (top, left, right, bottom) {
-		if (!this._fetchActiveRange) {
-			this.sheetCtrl.activeBlock.loadstate = zss.MainBlockCtrl.LOADING;
-			this.fire('onZSSFetchActiveRange', 
-				{sheetId: this.getSheetId(), top: top, left: left, right: right, bottom: bottom}, {toServer: true});
-			this._fetchActiveRange = true;
-		}
+        var t0 = performance.now();
+        if (!this._fetchActiveRange) {
+            this.sheetCtrl.activeBlock.loadstate = zss.MainBlockCtrl.LOADING;
+            this.fire('onZSSFetchActiveRange',
+                {sheetId: this.getSheetId(), top: top, left: left, right: right, bottom: bottom}, {toServer: true});
+            this._fetchActiveRange = true;
+        }
+        var t1 = performance.now();
+       // console.log("Call to fetchActiveRange took " + (t1 - t0) + " milliseconds.");
 	},
 	/**
 	 * Recive active range data
@@ -1316,6 +1319,7 @@ zss.Spreadsheet = zk.$extends(zul.wgt.Div, {
 	 * Case 2: spreadsheet has focus, depends on the target, execute the relative mouse down behavior		
 	 */
 	doMouseDown_: function (evt) {
+
 		if (this.sheetCtrl)
 			this.sheetCtrl._doMousedown(evt);
 		this.$supers('doMouseDown_', arguments);
@@ -1508,6 +1512,7 @@ zss.Spreadsheet = zk.$extends(zul.wgt.Div, {
 				sheet.showMask(false);
 			} else if(zk(sheet._wgt).isRealVisible() &&	!sheet.activeBlock.loadForVisible()){
 				//if no loadfor visible send after init, then we must sync the block size
+                console.log("Calling Spread 1512");
 				sheet.showMask(false);
 			}
 			if (zk.opera)
@@ -1521,6 +1526,7 @@ zss.Spreadsheet = zk.$extends(zul.wgt.Div, {
 			
 			//fix the IE sometime doesn't load bottom/right block after init/switch sheet/invalidate
 			setTimeout(function(){
+                console.log("Calling Spread 1527");
 				sheet.activeBlock.loadForVisible();
 				
 				// ZSS-600: create style context menu after initialized

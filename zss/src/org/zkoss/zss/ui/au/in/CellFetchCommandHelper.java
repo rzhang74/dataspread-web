@@ -108,7 +108,7 @@ public class CellFetchCommandHelper{
 		
 		String type = (String) data.get("type"); 
 		String direction = (String) data.get("direction");
-		
+		System.out.println("Type: "+type+",Direction: "+direction);
 		//ZSS-440, might get double in IE 10 when room
 		int dpWidth = AuDataUtil.getInt(data,"dpWidth");//pixel value of data panel width
 		int dpHeight = AuDataUtil.getInt(data,"dpHeight");//pixel value of data panel height
