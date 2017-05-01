@@ -20,7 +20,7 @@ Copyright (C) 2012 Potix Corporation. All Rights Reserved.
  * Preload extra cells data from server
  */
 zss.DeferLoader = zk.$extends(zk.Object, {
-	_deferTime: 500,
+	_deferTime: 500, //original 500
 	/**
 	 * Assume visible column size is 50
 	 * 
@@ -31,15 +31,15 @@ zss.DeferLoader = zk.$extends(zk.Object, {
 	 * 
 	 * Extra size: 60 (rows) * 50 (columns)
 	 */
-	_extraSize: 3000,
+	_extraSize: 3000,//org 3000
 	/**
 	 * Default load row size if Spreadsheet's preload row size not defined
 	 */
-	_loadRow: 60,
+	_loadRow: 60,//org 60
 	/**
 	 * Default load column size if Spreadsheet's preload column size not defined
 	 */
-	_loadCol: 40,
+	_loadCol: 50,//org 50
 	$init: function (sheet) {
 		this.sheet = sheet;
 		this._wgt = sheet._wgt;
@@ -51,6 +51,7 @@ zss.DeferLoader = zk.$extends(zk.Object, {
 		}
 
 		var sf = this;
+        console.log("preloadrowSF: "+sf._wgt.getPreloadRowSize());
 		if (this.shallLoad()) {
 			if (this.shallLoadNow()) {
 				this._timeoutId = null;
@@ -66,6 +67,8 @@ zss.DeferLoader = zk.$extends(zk.Object, {
 					left = -1,
 					right = -1,
 					bottom = -1;
+
+				console.log("preloadrow: "+preloadRow);
 				if (dir == 'south') {
 					left = rect.left;
 					right = rect.right;
@@ -131,6 +134,8 @@ zss.DeferLoader = zk.$extends(zk.Object, {
 			ar = wgt._cacheCtrl.getSelectedSheet(),
 			rect = ar.rect,
 			size = ((rect.right - rect.left + 1) * (rect.bottom - vrng.bottom + 1));
+
+		console.log("shallLoad:maxRow---"+maxRow);
 		switch (dir) {
 		case 'south':
 			var rbtm = rect.bottom;

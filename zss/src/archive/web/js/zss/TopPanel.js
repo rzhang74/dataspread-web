@@ -73,6 +73,8 @@ zss.TopPanel = zk.$extends(zss.Panel, {
 	getFrozenData_: function () {
 		var a = this.sheet._wgt._cacheCtrl.getSelectedSheet(),
 			f = a.topFrozen;
+
+		console.log("topFrozen:"+f);
 		return f ? f : a;
 	},
 	getFrozenHeaderData_: function () {

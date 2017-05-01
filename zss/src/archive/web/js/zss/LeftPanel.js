@@ -402,6 +402,7 @@ zss.LeftPanel = zk.$extends(zss.Panel, {
 			this.createHeaders_(dir, rowStart, rowEnd);
 		//console.log("dir in create rows from lp: "+dir);
 		var createFrozen = frozenColStart >= 0 && forzenColEnd >= 0;
+        console.log("dir in create rows from lp: "+dir+", and createFrozen: "+createFrozen);
 		if ('jump' == dir && createFrozen) {
           //  console.log("creating cells for south--jump");
 			var oldBlock = this.block;
@@ -436,6 +437,7 @@ zss.LeftPanel = zk.$extends(zss.Panel, {
 	getFrozenData_: function () {
 		var a = this.sheet._wgt._cacheCtrl.getSelectedSheet(),
 			f = a.leftFrozen;
+        //console.log("leftFrozen:"+f);
 		return f ? f : a;
 	},
 	getFrozenHeaderData_: function () {

@@ -74,20 +74,20 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
         var t_r1 = performance.now();
 		var self = this,
 			sheet = this.sheet;
-		clearTimeout(self._timeoutId);
-		self._timeoutId = setTimeout(function () {
+	//	clearTimeout(self._timeoutId);
+	//	self._timeoutId = setTimeout(function () {
             console.log("----MainBlockCtrl:Calling loadForVisible() line 64---");
             //var t0 = performance.now();
 			self.loadForVisible();
             //var t1 = performance.now();
             //console.log("Call to self load took " + (t1 - t0) + " milliseconds.");
-		}, 50);
+	//	}, 50);
         var t_r2 = performance.now();
         console.log("-----Out MainBlockCtrl:_recheckVisible()-----"+(t_r2-t_r1)+" ms");
 	},
 	/**
 	 * Create cells from cache
-	 * 
+	 *
 	 * @param string dir direction
 	 * @param int prune reserve when prune, -1 means don't prune, 0 means don't reserve 
 	 */
@@ -223,7 +223,9 @@ zss.MainBlockCtrl = zk.$extends(zss.CellBlockCtrl, {
 					return; //the visible is be contained.
 				var hgh = range.bottom - cbottom + 1;
 				//neighbor south
+
 				console.log("check if _createCellsIfCached for south");
+				console.log("ctop: "+ctop+", cbottom: "+cbottom+", range.top: "+range.top+", range.bottom: "+range.bottom);
 				if (hgh > 0 && !this._createCellsIfCached('south', hgh)) {
                     console.log("in doScroll--south 195--load from db");
 					sheet.activeBlock.loadCell(range.bottom, range.left, (alwaysjump ? -1 : 20), null, alwaysjump);

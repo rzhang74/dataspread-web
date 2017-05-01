@@ -119,6 +119,8 @@ zss.ScrollPanel = zk.$extends(zk.Object, {
 		sinfo.pinXY(data[0], data[1], clickInHor);
 	},
 	_doScrolling: function (evt) {
+		console.log("-----In ScrollPanel.js:_doScrolling------");
+		var t1 =  performance.now();
 		var sheet = this.sheet,
 			dtcmp = sheet.dp.comp,
 			sccmp = this.comp,
@@ -158,23 +160,34 @@ zss.ScrollPanel = zk.$extends(zk.Object, {
 			if (moveVertical || moveHorizontal)
 				this._trackScrolling(moveVertical);
 		}
+        var t2 =  performance.now();
+        console.log("-----Out ScrollPanel.js:_doScrolling------time: "+(t2-t1)+" ms");
 	},
 	_trackScrolling: function (vertical) {
+        console.log("-----In ScrollPanel.js:_trackScrolling------");
+        var t_t1 =  performance.now();
 		if (vertical)
 			this._fireOnVScroll();//fire scroll vertical
 		else
 			this._fireOnHScroll();//fire scroll horizontal
+        var t_t2 =  performance.now();
+        console.log("-----Out ScrollPanel.js:_trackScrolling------time: "+(t_t2-t_t1)+" ms");
 	},
 	_vscrollTimeoutId: null,
 	_hscrollTimeoutId: null,
 	_fireOnVScroll: function (time) {
-		clearTimeout(this._vscrollTimeoutId);
+        console.log("-----In ScrollPanel.js:_fireOnVScroll------");
+        var t_v1 =  performance.now();
+		//clearTimeout(this._vscrollTimeoutId);
 		
 		//this._vscrollTimeoutId = setTimeout(this.proxy(this._doVScroll), time >= 0 ? time : zk.gecko ? 200 : 60);
 		var self = this;
-		this._vscrollTimeoutId = setTimeout(function () {
+		//this._vscrollTimeoutId = setTimeout(function () {
 			self._doVScroll();
-		}, time >= 0 ? time : 60);
+		//}, time >= 0 ? time : 60);
+
+        var t_v2 =  performance.now();
+        console.log("-----Out ScrollPanel.js:_fireOnVScroll------time: "+(t_v2-t_v1)+" ms");
 	},
 	_fireOnHScroll: function (time) {
 		clearTimeout(this._hscrollTimeoutId);
@@ -186,7 +199,11 @@ zss.ScrollPanel = zk.$extends(zk.Object, {
 		}, time >= 0 ? time : 60);
 	},
 	_doVScroll: function () {
+        console.log("-----In ScrollPanel.js:_doVScroll------");
+        var t_ds1 =  performance.now();
 		this._doScroll(true);
+        var t_ds2 =  performance.now();
+        console.log("-----Out ScrollPanel.js:_doVScroll------time: "+(t_ds2-t_ds1)+" ms");
 	},
 	_doHScroll: function () {
 		this._doScroll(false);

@@ -209,6 +209,7 @@ zss.CellBlockCtrl = zk.$extends(zk.Widget, {
 	 * @param rCol
 	 */
 	create_: function (dir, tRow, lCol, bRow, rCol, data) {
+		console.log("---------In CellBlockCtrl:create_----------");
 		var sheet = this.sheet,
 			data = data || sheet._wgt._cacheCtrl.getSelectedSheet(),
 			block = this,
@@ -221,6 +222,8 @@ zss.CellBlockCtrl = zk.$extends(zk.Widget, {
 			isVer = isTop || isBtm || isJump,
 			isLeft = 'west' == dir,
 			isRight = 'east' == dir;
+        console.log("going south?:"+isBtm);
+        console.log("data: "+data);
 		for (var r = tRow, j = 0; r <= bRow; r++) {
 			var row = isVer ? new zss.Row(sheet, block, r, data) : this.getRow(r),
 				html = isVer ? row.getHtmlPrologHalf() : '';
@@ -259,6 +262,8 @@ zss.CellBlockCtrl = zk.$extends(zk.Widget, {
 			var oldRange = r;
 			this.range = new zss.Range(oldRange.left, oldRange.top, width, height, true);
 		}
+
+		console.log("---------Out CellBlockCtrl.js-----------");
 	},
     createFiller_: function (dir, tRow, lCol, bRow, rCol) {
         var sheet = this.sheet,

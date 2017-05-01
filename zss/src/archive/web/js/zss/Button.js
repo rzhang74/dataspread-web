@@ -1025,6 +1025,8 @@ zss.Menupopup = zk.$extends(zul.menu.Menupopup, {
 	},
 	open: function () {
 		this.$supers(zss.Menupopup, 'open', arguments);
+
+		console.log("initial open");
 		var wgt = this._wgt;
 		if (wgt) {//fake focus
 			wgt.focus(false);

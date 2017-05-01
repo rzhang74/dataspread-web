@@ -18,9 +18,9 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 */
 
 (function () {
-	var ROWINC = 40,
+	var ROWINC = 20, // original 40
 		COLINC = 60,
-		TIMEOUT = 100;
+		TIMEOUT = 100; // change scroll time out--original 100
 	/**
 	 * Sets scroll panel scroll position
 	 */
