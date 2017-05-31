@@ -18,6 +18,7 @@ public class test_btree  {
         DBContext context = new DBContext(connection.getConnection());
         BTree testTree = new BTree(context, tableName);
         Integer [] ids = testTree.createIDs(context, 0 , 10);
+        System.out.println(ids);
 
     }
 }
