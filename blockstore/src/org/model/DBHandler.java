@@ -10,14 +10,22 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import java.sql.DriverManager;
+
 /**
  * Created by Mangesh Bendre on 4/22/2016.
  */
 public class DBHandler implements ServletContextListener {
     public static DBHandler instance;
     private DataSource ds;
-
+    private String driver = "org.postgresql.Driver";
+    private String url = "jdbc:postgresql://localhost/ibd_bench";
+    private String user = "mangesh";
+    private String pass = "mangesh";
+    private Connection conn = null;
+    private Statement stmt = null;
     public static void connectToDB(String url, String driver, String userName, String password) {
+
         DBHandler.instance = new DBHandler();
         PoolProperties p = new PoolProperties();
         p.setUrl(url);
@@ -29,10 +37,15 @@ public class DBHandler implements ServletContextListener {
                 = new org.apache.tomcat.jdbc.pool.DataSource();
         datasource.setPoolProperties(p);
         instance.ds = datasource;
+
     }
 
     public Connection getConnection()
     {
+
+
+        System.out.println("connecting to database...");
+
         try {
             return ds.getConnection();
         } catch (SQLException e) {
