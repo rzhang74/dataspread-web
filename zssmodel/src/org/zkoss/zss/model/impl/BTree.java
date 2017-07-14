@@ -887,8 +887,11 @@ public class BTree implements PosMapping {
             Node u = Node.get(context, bs, ui);
             int i = findIt(u.keys, key);
             if (u.isLeaf()) {
-                if (i > 0 && u.keys[i - 1] == key)
-                    return u.values[i - 1]; // found it
+                if (i > 0 && u.keys[i - 1] == key) {
+                    String[] parts = u.values[i].split(",");
+                    int r = Integer.parseInt(parts[0]);
+                    return r; // found it
+                }
                 else
                     return -1;
             }
@@ -914,7 +917,9 @@ public class BTree implements PosMapping {
             if (u.isLeaf()) {
                 i = (int) ct;
                 first_index = i;
-                ids[get_count++] = u.values[i];
+                String[] parts = u.values[i].split(",");
+                int r = Integer.parseInt(parts[0]);
+                ids[get_count++] = r;
                 break;
             }
             ui = u.children[i];
@@ -925,15 +930,20 @@ public class BTree implements PosMapping {
         }
         int index = first_index + 1;
         while (get_count < count && u.next_sibling != -1) {
-            while (index < u.keySize() && get_count < count)
-                ids[get_count++] = u.values[index++];
+            while (index < u.keySize() && get_count < count) {
+                String[] parts = u.values[index++].split(",");
+                int r = Integer.parseInt(parts[0]);
+                ids[get_count++] = r;
+            }
             ui = u.next_sibling;
             u = Node.get(context, bs, ui);
             index = 0;
         }
-        while (index < u.keySize() && get_count < count)
-            ids[get_count++] = u.values[index++];
-
+        while (index < u.keySize() && get_count < count) {
+            String[] parts = u.values[index++].split(",");
+            int r = Integer.parseInt(parts[0]);
+            ids[get_count++] = r;
+        }
         while (get_count < count)
             ids[get_count++] = -1;
         return ids;
@@ -947,7 +957,9 @@ public class BTree implements PosMapping {
             int i = findItByCount(u.childrenCount, ct);
             if (u.isLeaf()) {
                 i = (int) ct - 1;
-                return u.values[i];
+                String[] parts = u.values[i].split(",");
+                int r = Integer.parseInt(parts[0]);
+                return r;
             }
             ui = u.children[i];
             for (int z = 0; z < i; z++) {
@@ -1081,7 +1093,7 @@ public class BTree implements PosMapping {
         /**
          * Data stored in the leaf blocks
          */
-        int[] values;
+        String [] values;
 
         /**
          * Leaf Node, no children, has values
@@ -1096,7 +1108,7 @@ public class BTree implements PosMapping {
         /**
          * Check if the value is an ordinary data value or a set of empty data
          */
-        int [] isEmptyKey;
+
 
         private Node() {
             keys = new int[b];
@@ -1104,12 +1116,10 @@ public class BTree implements PosMapping {
             children = null;
             childrenCount = null;
             leafNode = true;
-            values = new int[b];
-            Arrays.fill(values, -1);
+            values = new String[b];
+            Arrays.fill(values, "");
             parent = -1;    // Root node
             next_sibling = -1;
-            isEmptyKey = new int[b];
-            Arrays.fill(isEmptyKey, -1);
         }
 
         public static Node create(DBContext context, BlockStore bs) {
@@ -1184,10 +1194,12 @@ public class BTree implements PosMapping {
             int lo = 0, h = values.length;
 
             for (int i = 0; i < h; i++) {
-                if (values[i] != -1) {
-                    if (isEmptyKey[i] == 1)
-                        lo += values[i];
-                    else
+                if(values[i] != "") {
+                    String[] parts = values[i].split(",");
+                    if (parts[1] != "-1") {
+                        int r = Integer.parseInt(parts[0]);
+                        lo += r;
+                    } else
                         lo++;
                 }
             }
@@ -1198,7 +1210,7 @@ public class BTree implements PosMapping {
             int lo = 0, h = values.length;
             while (h != lo) {
                 int m = (h + lo) / 2;
-                if (values[m] == -1)
+                if (values[m] == "")
                     h = m;
                 else
                     lo = m + 1;
@@ -1261,7 +1273,7 @@ public class BTree implements PosMapping {
             keys[i] = key;
             if (leafNode) {
                 if (shift) System.arraycopy(values, i, values, i + 1, b - i - 1);
-                values[i] = value;
+                values[i] = value + ", 1";
 
             } else {
                 if (shift) System.arraycopy(children, i + 1, children, i + 2, b - i - 1);
@@ -1297,11 +1309,11 @@ public class BTree implements PosMapping {
             if (leafNode) {
                 i = (int) pos;
                 if (i < keySize()) System.arraycopy(values, i, values, i + 1, b - i - 1);
-                values[i] = value;
-                if(empty){
-                    if(i < keySize()) System.arraycopy(isEmptyKey, i, isEmptyKey, i + 1, b - i - 1);
-                    isEmptyKey[i] = 1;
-                }
+                if(empty == true)
+                    values[i] = value + ", -1";
+                else
+                    values[i] = value + ", 1";
+
             } else {
                 if (shift) System.arraycopy(children, i + 1, children, i + 2, b - i - 1);
                 if (shift) System.arraycopy(childrenCount, i + 1, childrenCount, i + 2, b - i - 1);
@@ -1338,13 +1350,14 @@ public class BTree implements PosMapping {
         }
 
         public int removeBoth(int i) {
-            int y = values[i];
+            String y = values[i];
             System.arraycopy(keys, i + 1, keys, i, b - i - 1);
             keys[keys.length - 1] = -1;
             System.arraycopy(values, i + 1, values, i, b - i - 1);
-            values[values.length - 1] = -1;
-
-            return y;
+            values[values.length - 1] = "";
+            String[] parts = y.split(",");
+            int r = Integer.parseInt(parts[0]);
+            return r;
         }
 
         /**
