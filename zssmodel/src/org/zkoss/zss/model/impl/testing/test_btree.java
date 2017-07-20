@@ -18,7 +18,7 @@ public class test_btree  {
         DBhand connection = new DBhand();
         connection.connectDB();
         DBContext context = new DBContext(connection.getConnection());
-        String tableName = "test1";
+        String tableName = "test2";
         BTree testTree = new BTree(context, tableName);
 
         Integer [] ints = testTree.getIDs(context, 0, 10);

@@ -756,7 +756,7 @@ public class BTree implements PosMapping {
             System.arraycopy(v.keys, sv - shift, w.keys, 0, shift);
             Arrays.fill(v.keys, sv - shift, sv, -1);
             System.arraycopy(v.values, sv - shift, w.values, 0, shift);
-            Arrays.fill(v.values, sv - shift, sv, -1);
+            Arrays.fill(v.values, sv - shift, sv, "");
 
         } else {
             // Don't move this key for leaf
@@ -842,7 +842,7 @@ public class BTree implements PosMapping {
 
         if (v.isLeaf()) {
             System.arraycopy(v.values, shift, v.values, 0, b - shift);
-            Arrays.fill(v.values, sv - shift + 1, b, -1);
+            Arrays.fill(v.values, sv - shift + 1, b, "");
         } else {
             System.arraycopy(v.children, shift, v.children, 0, b - shift + 1);
             Arrays.fill(v.children, sv - shift + 1, b + 1, -1);
@@ -888,8 +888,7 @@ public class BTree implements PosMapping {
             int i = findIt(u.keys, key);
             if (u.isLeaf()) {
                 if (i > 0 && u.keys[i - 1] == key) {
-                    String[] parts = u.values[i].split(",");
-                    int r = Integer.parseInt(parts[0]);
+                    int r = Integer.parseInt(u.values[i]);
                     return r; // found it
                 }
                 else
@@ -917,8 +916,7 @@ public class BTree implements PosMapping {
             if (u.isLeaf()) {
                 i = (int) ct;
                 first_index = i;
-                String[] parts = u.values[i].split(",");
-                int r = Integer.parseInt(parts[0]);
+                int r = Integer.parseInt(u.values[i]);
                 ids[get_count++] = r;
                 break;
             }
@@ -931,8 +929,7 @@ public class BTree implements PosMapping {
         int index = first_index + 1;
         while (get_count < count && u.next_sibling != -1) {
             while (index < u.keySize() && get_count < count) {
-                String[] parts = u.values[index++].split(",");
-                int r = Integer.parseInt(parts[0]);
+                int r = Integer.parseInt(u.values[index++]);
                 ids[get_count++] = r;
             }
             ui = u.next_sibling;
@@ -940,8 +937,7 @@ public class BTree implements PosMapping {
             index = 0;
         }
         while (index < u.keySize() && get_count < count) {
-            String[] parts = u.values[index++].split(",");
-            int r = Integer.parseInt(parts[0]);
+            int r = Integer.parseInt(u.values[index++]);
             ids[get_count++] = r;
         }
         while (get_count < count)
@@ -957,8 +953,7 @@ public class BTree implements PosMapping {
             int i = findItByCount(u.childrenCount, ct);
             if (u.isLeaf()) {
                 i = (int) ct - 1;
-                String[] parts = u.values[i].split(",");
-                int r = Integer.parseInt(parts[0]);
+                int r = Integer.parseInt(u.values[i]);
                 return r;
             }
             ui = u.children[i];
@@ -1195,11 +1190,10 @@ public class BTree implements PosMapping {
 
             for (int i = 0; i < h; i++) {
                 if(values[i] != "") {
-                    String[] parts = values[i].split(",");
-                    if (parts[1] != "-1") {
-                        int r = Integer.parseInt(parts[0]);
+                    int r = Integer.parseInt(values[i]);
+                    if( r < 0 )
                         lo += r;
-                    } else
+                    else
                         lo++;
                 }
             }
@@ -1310,9 +1304,9 @@ public class BTree implements PosMapping {
                 i = (int) pos;
                 if (i < keySize()) System.arraycopy(values, i, values, i + 1, b - i - 1);
                 if(empty == true)
-                    values[i] = value + ", -1";
+                    values[i] = value + "";
                 else
-                    values[i] = value + ", 1";
+                    values[i] = -value + "";
 
             } else {
                 if (shift) System.arraycopy(children, i + 1, children, i + 2, b - i - 1);
@@ -1355,8 +1349,8 @@ public class BTree implements PosMapping {
             keys[keys.length - 1] = -1;
             System.arraycopy(values, i + 1, values, i, b - i - 1);
             values[values.length - 1] = "";
-            String[] parts = y.split(",");
-            int r = Integer.parseInt(parts[0]);
+
+            int r = Integer.parseInt(y);
             return r;
         }
 
@@ -1375,7 +1369,7 @@ public class BTree implements PosMapping {
             if (leafNode) {
                 // Copy Values
                 System.arraycopy(values, j, w.values, 0, values.length - j);
-                Arrays.fill(values, j, values.length, -1);
+                Arrays.fill(values, j, values.length, "");
                 w.next_sibling = next_sibling;
                 next_sibling = w.id;
             } else {
