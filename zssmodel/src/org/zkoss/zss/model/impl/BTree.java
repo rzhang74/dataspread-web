@@ -1267,7 +1267,7 @@ public class BTree implements PosMapping {
             keys[i] = key;
             if (leafNode) {
                 if (shift) System.arraycopy(values, i, values, i + 1, b - i - 1);
-                values[i] = value + ", 1";
+                values[i] = value + "";
 
             } else {
                 if (shift) System.arraycopy(children, i + 1, children, i + 2, b - i - 1);
@@ -1304,9 +1304,9 @@ public class BTree implements PosMapping {
                 i = (int) pos;
                 if (i < keySize()) System.arraycopy(values, i, values, i + 1, b - i - 1);
                 if(empty == true)
-                    values[i] = value + "";
-                else
                     values[i] = -value + "";
+                else
+                    values[i] = value + "";
 
             } else {
                 if (shift) System.arraycopy(children, i + 1, children, i + 2, b - i - 1);
