@@ -1,9 +1,11 @@
 package org.zkoss.zss.model.impl;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import org.model.BlockStore;
 import org.model.DBContext;
 import org.zkoss.util.logging.Log;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**
@@ -13,6 +15,7 @@ public class BTree implements PosMapping {
     /**
      * The maximum number of children of a node (an odd number)
      */
+
     protected static final int b = 101;
     /**
      * Logging
@@ -21,7 +24,8 @@ public class BTree implements PosMapping {
     /**
      * b div 2
      */
-    protected final int B = b / 2;
+    protected final int B
+            = b / 2;
     /**
      * The ID of the meta data node
      */
@@ -130,6 +134,7 @@ public class BTree implements PosMapping {
         if (w != null) {   // root was split, make new root
             Node newRoot = Node.create(context, bs);
             key = w.removeKey(0);
+            w.parent = newRoot.id;
             w.update(bs);
             // No longer a leaf node
             // First time leaf becomes a root
@@ -195,6 +200,7 @@ public class BTree implements PosMapping {
             u.childrenCount[i]++;
             Node w = addRecursive(context, key, u.children[i], val);
             if (w != null) {  // child was split, w is new child
+                w.parent = u.id;
                 key = w.removeKey(0);
                 w.update(bs);
                 u.add(context, key, w, val);
@@ -237,6 +243,7 @@ public class BTree implements PosMapping {
         w = addRecursiveByCount(context, pos, metaDataBlock.ri, val, empty);
         if (w != null) {   // root was split, make new root
             Node newroot = Node.create(context, bs);
+            w.parent = newroot.id;
             w.update(bs);
             // No longer a leaf node
             // First time leaf becomes a root
@@ -251,6 +258,7 @@ public class BTree implements PosMapping {
             newroot.children[0] = metaDataBlock.ri;
             newroot.children[1] = w.id;
             Node leftNode = Node.get(context, bs, metaDataBlock.ri);
+            leftNode.parent = newroot.id;
             if (leftNode.isLeaf()) {
                 newroot.childrenCount[0] = leftNode.valueSize();
             } else {
@@ -309,6 +317,7 @@ public class BTree implements PosMapping {
                 u.childrenCount[i]++;
             Node w = addRecursiveByCount(context, newn, u.children[i], val, empty);
             if (w != null) {  // child was split, w is new child
+                w.parent = u.id; //w's parent is u
                 w.update(bs);
                 u.addByCount(context, pos, w, val, false);
                 if (w.isLeaf()) {
@@ -437,9 +446,19 @@ public class BTree implements PosMapping {
         // add key to v and remove it from u
         // U should not be a leaf node
         u.childrenCount[i] += u.childrenCount[i + 1];
-
+        //assign w's children nodes to v
+        int j = 0;
+        if(w.children != null) {
+            while (w.children[j] != -1) {
+                Node temp = Node.get(context, bs, w.children[j]);
+                temp.parent = v.id;
+                temp.update(bs);
+                j++;
+            }
+        }
         // w ids is in u.children[i+1]
         // Free block
+        //for( int i; i )
         w.free(bs);
 
         System.arraycopy(u.children, i + 2, u.children, i + 1, b - i - 1);
@@ -567,7 +586,7 @@ public class BTree implements PosMapping {
             // Do not bring the key from u
             System.arraycopy(v.values, 0, w.values, sw, shift);
             System.arraycopy(v.values, shift, v.values, 0, b - shift);
-            Arrays.fill(v.values, sv - shift + 1, b, -1);
+            Arrays.fill(v.values, sv - shift + 1, b, "-1");
             u.childrenCount[i + 1] -= shift;
             u.childrenCount[i] += shift;
         } else {
@@ -687,7 +706,12 @@ public class BTree implements PosMapping {
         u.childrenCount[i] += u.childrenCount[i + 1];
         System.arraycopy(u.keys, i + 1, u.keys, i, b - i - 1);
         u.keys[b - 1] = -1;
-
+        //assign w's children nodes to v
+        for( int j = 0; j < w.children.length; j++){
+            Node temp = Node.get(context, bs, w.children[j]);
+            temp.parent = v.id;
+            temp.update(bs);
+        }
         // w ids is in u.children[i+1]
         // Free block
         w.free(bs);
@@ -1047,7 +1071,130 @@ public class BTree implements PosMapping {
         return id;
     }
 
-    private static class MetaDataBlock {
+    public boolean validateNodeParent(DBContext context, int id){
+        Node u = new Node();
+        u.get(context, bs, id);
+
+        boolean valid = true;
+        if(u.children != null) {
+            for (int i = 0; i < u.children.length; i++) {
+                Node c = new Node();
+                c.get(context, bs, u.children[i]);
+                if (c.parent != id) {
+                    return false;
+                } else {
+                    if (!c.isLeaf()) {
+                        valid = validateNodeParent(context, c.id);
+                    }
+                }
+            }
+        }
+        return valid;
+    }
+
+    public boolean validateParentPointers(DBContext context){
+        return validateNodeParent(context, metaDataBlock.ri);
+    }
+
+    public void pregenerateTree(DBContext context, int count){
+        double numLeafNodes = Math.ceil(count/(b-1));
+        int total = (int)numLeafNodes;
+        int numInternal = pregenerateLeafNodes(context, count, 0, total) - total;//number of Interal Nodes in second level
+        int children = 1;
+        pregenerateInternalNodes(context, total, numInternal, children);
+    }
+
+    public void pregenerateInternalNodes(DBContext context, int total, int numInternal, int children){
+        if(numInternal == 0){
+            return;
+        }
+        for(int i = 0; i < numInternal-2; i++){
+            Node u = Node.create(context, bs);
+            u.leafNode = false;
+            u.children = new int[b];
+            u.childrenCount = new long[b];
+            for(int j = 0; j < b-1; j++) {
+                u.children[j] = children++;
+                u.childrenCount[j] = b-1;
+            }
+            u.parent = total + numInternal + (i/(b-1)) + 1;
+        }
+        pregenerateLastTwoInternal(context, total, numInternal, children);
+        total = total + numInternal;
+        numInternal = (int)(Math.ceil(numInternal/(b-1)));
+        pregenerateInternalNodes(context, total, numInternal, children);
+
+    }
+
+    public void pregenerateLastTwoInternal(DBContext context, int total, int numInternal, int children){
+
+    }
+
+    public int pregenerateLeafNodes(DBContext context, int count, int valueCount, int total){
+        if( total > 2) {//if tree requires more than 2 leaf nodes
+            for (int x = 0; x < total - 2; x++) {
+                Node u = Node.create(context, bs);
+                for (int i = 0; i < b - 1; i++) {
+                    u.values[i] = "" + valueCount;
+                    valueCount++;
+                }
+                count -= b - 1;
+
+                int parent_id = valueCount / ((b - 1) * (b - 1));
+                if (total < b - 1) {
+                    u.parent = total + 1;
+                } else {
+                    u.parent = b + parent_id;
+                }
+                u.next_sibling = u.id + 1;
+                u.update(bs);
+            }
+        }
+        else if(total == 1){//if tree requires one leaf node
+            Node v = Node.create(context, bs);
+            for(int j = 0; j < count; j++){
+                v.values[j] = "" + valueCount;
+                valueCount++;
+            }
+            v.parent = metaDataBlock.ri;
+            return 1;
+        }
+        return pregenerateLastTwoLeafNodes(context, count, valueCount, total);
+
+    }
+
+    public int pregenerateLastTwoLeafNodes(DBContext context, int count, int valueCount, int total){
+        int valNode1 = count/2;
+        int valNode2 = count - valNode1;
+        Node u = Node.create(context, bs);
+        Node v = Node.create(context, bs);
+        for(int i = 0; i < valNode1; i++){
+            u.values[i] = ""+valueCount;
+            valueCount++;
+        }
+        int parent_id_u = valueCount / ((b - 1) * (b - 1));
+        if (total < b - 1) {
+            u.parent = total + 1;
+        } else {
+            u.parent = b + parent_id_u;
+        }
+        for(int j = 0; j < valNode2; j++){
+            v.values[j] = ""+valueCount;
+            valueCount++;
+        }
+        int parent_id_v = valueCount / ((b - 1) * (b - 1));
+        if (total < b - 1) {
+            v.parent = total + 1;
+        } else {
+            v.parent = b + parent_id_v;
+        }
+        u.update(bs);
+        v.update(bs);
+        return v.parent;
+    }
+
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    public static class MetaDataBlock{
         // The ID of the root node
         int ri;
         // Maximum key value for data
@@ -1059,7 +1206,8 @@ public class BTree implements PosMapping {
     /**
      * A node in a B-tree which has an array of up to b keys and up to b children
      */
-    private static class Node {
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    public static class Node implements Serializable {
         /**
          * This block's index
          */
@@ -1361,13 +1509,12 @@ public class BTree implements PosMapping {
          */
         protected Node split(DBContext context, BlockStore bs) {
             Node w = Node.create(context, bs);
-
+            w.parent = parent;
             int j = keys.length / 2;
             System.arraycopy(keys, j, w.keys, 0, keys.length - j);
             Arrays.fill(keys, j, keys.length, -1);
-
             if (leafNode) {
-                // Copy Values
+                //Copy Values
                 System.arraycopy(values, j, w.values, 0, values.length - j);
                 Arrays.fill(values, j, values.length, "");
                 w.next_sibling = next_sibling;
@@ -1376,15 +1523,22 @@ public class BTree implements PosMapping {
                 w.children = new int[b + 1];
                 Arrays.fill(w.children, 0, w.children.length, -1);
 
-                // Copy Children
+                //Copy Children
                 System.arraycopy(children, j + 1, w.children, 0, children.length - j - 1);
                 Arrays.fill(children, j + 1, children.length, -1);
-
+                //
+                int i = 0;
+                while(w.children[i] != -1){
+                    Node tempnode = get(context, bs, w.children[i]);
+                    tempnode.parent = w.id;
+                    tempnode.update(bs);
+                    i++;
+                }
                 //Create child counts
                 w.childrenCount = new long[b + 1];
                 Arrays.fill(w.childrenCount, 0, w.childrenCount.length, 0);
 
-                // Copy Counts
+                //Copy Counts
                 System.arraycopy(childrenCount, j + 1, w.childrenCount, 0, childrenCount.length - j - 1);
                 Arrays.fill(childrenCount, j + 1, childrenCount.length, 0);
             }

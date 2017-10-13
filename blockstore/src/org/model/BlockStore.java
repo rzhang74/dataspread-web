@@ -3,12 +3,14 @@ package org.model;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.ByteArrayOutputStream;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.io.Serializable;
+import java.sql.*;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -34,6 +36,11 @@ public class BlockStore {
     private int inMemBlockId = 1;
     /* Serializer */
     private Kryo kryo;
+    private boolean useKryo = false;
+
+    public void setKryo(boolean useKryo){
+        this.useKryo = useKryo;
+    }
 
     // In Memory Block store
     BlockStore() {
@@ -158,9 +165,16 @@ public class BlockStore {
             stmt.setInt(1, block_id);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                Input in = new Input(rs.getBytes(1));
-                obj = kryo.readObject(in, type);
-                in.close();
+                if(useKryo) {
+                    Input in = new Input(rs.getBytes(1));
+                    obj = kryo.readObject(in, type);
+                    in.close();
+                } else {
+                    ObjectMapper mapper = new ObjectMapper();
+                    String value = new String(rs.getBytes(1));
+                    mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+                    obj = mapper.readValue(value, type);
+                }
             }
             rs.close();
             stmt.close();
@@ -187,12 +201,20 @@ public class BlockStore {
         try (PreparedStatement stmt = context.getConnection().prepareStatement(insertOrUpdate)) {
             for (Map.Entry<Integer, Object> blockEntry : dirtyBlocks.entrySet()) {
                 stmt.setInt(1, blockEntry.getKey());
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                Output out = new Output(byteArrayOutputStream);
-                kryo.writeObject(out, blockEntry.getValue());
-                stmt.setBytes(2, out.toBytes());
-                out.close();
-                byteArrayOutputStream.close();
+
+                if (useKryo) {
+                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                    Output out = new Output(byteArrayOutputStream);
+                    kryo.writeObject(out, blockEntry.getValue());
+                    stmt.setBytes(2, out.toBytes());
+                    out.close();
+                    byteArrayOutputStream.close();
+                } else {
+                    ObjectMapper mapper = new ObjectMapper();
+                    Object o = blockEntry.getValue();
+                    String value = mapper.writeValueAsString(o);
+                    stmt.setBytes(2, value.getBytes());
+                }
                 stmt.execute();
             }
         } catch (Exception e) {
