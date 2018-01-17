@@ -14,6 +14,8 @@ package org.zkoss.zss.app.ui;
 import org.ngi.zhighcharts.SimpleExtXYModel;
 import org.ngi.zhighcharts.ZHighCharts;
 import org.zkoss.image.AImage;
+import org.zkoss.json.JSONArray;
+import org.zkoss.json.JSONObject;
 import org.zkoss.lang.Library;
 import org.zkoss.lang.Strings;
 import org.zkoss.util.logging.Log;
@@ -1234,17 +1236,69 @@ public class AppCtrl extends CtrlBase<Component> {
         return dtnc;
     }
 
+    private JSONObject createChildrenBuckets(ArrayList<Bucket<String>> bucketList) {
+
+        JSONObject obj = new JSONObject();
+
+        String max = bucketList.get(bucketList.size()-1).getMaxValue();
+        String min = bucketList.get(0).getMinValue();
+        int start = bucketList.get(0).getStartPos();
+        int end = bucketList.get(bucketList.size()-1).getEndPos();
+
+        if(max == null || min == null)
+        {
+            String tmp = bucketList.get(bucketList.size()-1).getName();
+
+            if(tmp.contains("Rows:")) {
+                tmp = tmp.split(":")[1];
+            }
+
+            max = tmp.split("-")[1];
+            min = tmp.split("-")[0];
+
+        }
+        obj.put("name", min.equals(max)?min:min+" to "+max);
+        obj.put("rowRange", (start+1) + "---" + (end+1));
+        obj.put("size", end-start+1);
+        obj.put("subCat", bucketList.size());
+
+        JSONArray children = new JSONArray();
+
+        for(int i=0;i<bucketList.size();i++) {
+
+            /*if(bucketList.get(i).getChildrenCount()>0) {
+                children.add(createChildrenBuckets(bucketList.get(i).getChildren()));
+            }
+            else*/
+            {
+                JSONObject objTemp = new JSONObject();
+
+                objTemp.put("name", bucketList.get(i).getName());
+                objTemp.put("rowRange", (bucketList.get(i).getStartPos()+1) + "---" + (bucketList.get(i).getEndPos()+1));
+                objTemp.put("size", bucketList.get(i).getSize());
+                objTemp.put("subCat", 0);
+
+                children.add(objTemp);
+            }
+        }
+        obj.put("children", children);
+
+        return obj;
+    }
+
    private void createNavSTree(ArrayList<Bucket<String>> bucketList) {
 
+        Clients.evalJavaScript("display('" + createChildrenBuckets(bucketList).toJSONString() + "');");
+
         //treeBucket.setAutopaging(true);
-        BucketTreeNodeCollection<Bucket<String>> btnc = new BucketTreeNodeCollection<Bucket<String>>();
+        /*BucketTreeNodeCollection<Bucket<String>> btnc = new BucketTreeNodeCollection<Bucket<String>>();
         navSBucketMap.clear();
         navSBucketLevel.clear();
         btnc = childrenBuckets(bucketList,0);
 
         treeBucket.setModel(new DefaultTreeModel<Bucket<String>>(new BucketTreeNode<Bucket<String>>(null,btnc)));
 
-        /*for(int i=0;i<bucketList.size();i++)
+        for(int i=0;i<bucketList.size();i++)
         {
             System.out.println("Bucket "+(i+1));
             System.out.println("Max: "+bucketList.get(i).getMaxValue());
