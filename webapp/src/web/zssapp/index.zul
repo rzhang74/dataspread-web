@@ -17,6 +17,7 @@
 								<label value="${each}" />
 							</template>
 						</selectbox>
+
 						<html>
 
 							<![CDATA[
@@ -38,33 +39,32 @@
 									var diagonal = d3.svg.diagonal()
 										.projection(function(d) { return [d.y, d.x]; });
 
-									var svg = d3.select("#viz").append("svg:svg")
+									var element = document.getElementById("viz");
+
+									var svg = d3.select("#viz").append("svg")
 										.attr("width", width + margin.left + margin.right)
-										.attr("transform", "translate(" + 0 + "," + 0 + ")")
-										.style("position","absolute")
-									  .append("g")
+										.append("g")
 										.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 									function display(model){
-										console.log(model);
-										d3.json(model, function(error, flare) {
-											  if (error) throw error;
-											  flare.x0 = 0;
-											  flare.y0 = 0;
-											  root = flare;
-											  root.children.forEach(collapse);
-											  update(root);
-											  click(root);
-											});
+										console.log(element);
+										root = JSON.parse(model);
+										root.x0 = 0;
+										root.y0 = 0;
+										root.children.forEach(collapse);
+										update(root);
+										click(root);
+
 									}
 
 									function update(source) {
 
 									  // Compute the flattened node list. TODO use d3.layout.hierarchy.
 									  var nodes = tree.nodes(root);
-
+									  console.log("nodes: ");
+									  console.log(nodes);
 									  var height = Math.max(500, nodes.length * barHeight + margin.top + margin.bottom);
-
+									  console.log("height: "+height);
 									  d3.select("svg").transition()
 										  .duration(duration)
 										  .attr("height", height);
@@ -78,9 +78,13 @@
 										n.x = i * barHeight;
 									  });
 
+									  console.log("Update the nodes");
 									  // Update the nodes…
 									  var node = svg.selectAll("g.node")
-										  .data(nodes, function(d) { return d.id || (d.id = ++i); });
+										  .data(nodes, function(d) {
+													console.log(d);
+													return d.id || (d.id = ++i);
+												});
 
 									  var nodeEnter = node.enter().append("g")
 										  .attr("class", "node")
@@ -98,9 +102,9 @@
 											  var range = d.rowRange.split('---');
 											  var sta = +range[0];
 											  var end = +range[1];
-											  showBar(sta,end);
+											  //showBar(sta,end);
 											  if (end - sta > 500) end = sta + 500;
-											  loadData(sta,end,0,4);
+											  //loadData(sta,end,0,4);
 											  click(d);
 										  });
 
@@ -167,6 +171,8 @@
 
 									// Toggle children on click.
 									function click(d) {
+									  console.log("click: ");
+									  console.log(d);
 									  if (d.children) {
 										d._children = d.children;
 										d.children = null;
@@ -193,7 +199,6 @@
 
 						</html>
 					</div>
-
 <!--<include vflex="1" src="~./zssapp/hierarchy.zul"></include>-->
 				</vlayout>
                 <spreadsheet id="ss" hflex="1" showToolbar="true" showFormulabar="true" showSheetbar="true"
