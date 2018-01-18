@@ -1266,10 +1266,10 @@ public class AppCtrl extends CtrlBase<Component> {
 
         for(int i=0;i<bucketList.size();i++) {
 
-            /*if(bucketList.get(i).getChildrenCount()>0) {
+            if(bucketList.get(i).getChildrenCount()>0) {
                 children.add(createChildrenBuckets(bucketList.get(i).getChildren()));
             }
-            else*/
+            else
             {
                 JSONObject objTemp = new JSONObject();
 
