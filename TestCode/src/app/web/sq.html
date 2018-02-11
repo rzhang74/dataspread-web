@@ -111,8 +111,8 @@ rect.parent,
 <div class="col-md-23 legend" style="margin-top:-10px;margin-bottom:0px;">
   <strong>Navigate</strong>
   <form class="buttons">
-  <label><input type="radio" name="mode" value="party" onclick="javascript:window.location.href='http://localhost:8080/index.html'; return false;" checked> Slice</label>
-  <label><input type="radio" name="mode" onclick="javascript:window.location.href='http://localhost:8080/dice.html'; return false;" value="donor"> Dice</label>
+  <label><input type="radio" name="mode" value="party" onclick="javascript:window.location.href='http://localhost:8080/index.html'; return false;"> Slice</label>
+  <label><input type="radio" name="mode" onclick="javascript:window.location.href='http://localhost:8080/dice.html'; return false;" value="donor" checked> Dice</label>
   <label><input type="radio" name="mode" onclick="javascript:window.location.href='http://localhost:8080/sq.html'; return false;" value="donor"> Squarify</label>
  </form>
 </div>
@@ -125,7 +125,7 @@ rect.parent,
 
   // Largeur de la width
   var obj = document.getElementById('chart');
-  var divWidth = obj.offsetWidth/3;
+  var divWidth = obj.offsetWidth;
 
   var margin = {top: 30, right: 0, bottom: 20, left: 0},
     width = divWidth -25,
@@ -152,7 +152,7 @@ rect.parent,
   // introduce color scale here
   var treemap = d3.layout.treemap()
     .children(function(d, depth) { return depth ? null : d._children; })
-    .mode("slice")
+    //.mode("slice")
     .sort(function(a, b) { return b.name.localeCompare(a.name); })
     .ratio(height / width * 0.5 * (1 + Math.sqrt(5)))
     .round(false);
@@ -248,7 +248,7 @@ rect.parent,
       d._children.forEach(function(c) {
         
         /****swap for horizontal partition****/
-        c = swapForPartition(c);
+       // c = swapForPartition(c);
 
       /********/  
       c.x = d.x + c.x * d.dx;
