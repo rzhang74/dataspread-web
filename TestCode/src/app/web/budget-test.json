@@ -1,0 +1,54 @@
+{
+  "name": "Ashville to Washington D.C.",
+  "rowRange": "1---10924",
+  "value": 10924,
+  "rate": 8,
+  "children": [
+    {
+      "name": "Ashville to Boston",
+      "rowRange": "1---1073",
+      "value": 1073,
+      "rate": 3,
+      "children": [
+        {
+          "name": "72 to 75",
+          "rowRange": "1---74",
+          "value": 74,
+          "rate": 11
+        },
+        {
+          "name": "666 to 673",
+          "rowRange": "75---672",
+          "value": 598,
+          "rate": 11
+        },
+        {
+          "name": "1074",
+          "rowRange": "673---1073",
+          "value": 401,
+          "rate": 11
+        }
+      ]
+    },
+    {
+      "name": "Chicago to Denver",
+      "rowRange": "1074---1704",
+      "value": 631,
+      "rate": 2,
+      "children": [
+        {
+          "name": "1515 to 1517",
+          "rowRange": "1074---1516",
+          "value": 443,
+          "rate": 11
+        },
+        {
+          "name": "1698 to 1705",
+          "rowRange": "1517---1704",
+          "value": 188,
+          "rate": 11
+        }
+      ]
+    }
+  ]
+}
