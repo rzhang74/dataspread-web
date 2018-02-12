@@ -1236,59 +1236,66 @@ public class AppCtrl extends CtrlBase<Component> {
         return dtnc;
     }
 
-    private JSONObject createChildrenBuckets(ArrayList<Bucket<String>> bucketList) {
-
-        JSONObject obj = new JSONObject();
-
-        String max = bucketList.get(bucketList.size()-1).getMaxValue();
-        String min = bucketList.get(0).getMinValue();
-        int start = bucketList.get(0).getStartPos();
-        int end = bucketList.get(bucketList.size()-1).getEndPos();
-
-        if(max == null || min == null)
-        {
-            String tmp = bucketList.get(bucketList.size()-1).getName();
-
-            if(tmp.contains("Rows:")) {
-                tmp = tmp.split(":")[1];
-            }
-
-            max = tmp.split("-")[1];
-            min = tmp.split("-")[0];
-
-        }
-        obj.put("name", min.equals(max)?min:min+" to "+max);
-        obj.put("rowRange", (start+1) + "---" + (end+1));
-        obj.put("size", end-start+1);
-        obj.put("subCat", bucketList.size());
+    private JSONArray createChildrenBuckets(ArrayList<Bucket<String>> bucketList) {
 
         JSONArray children = new JSONArray();
 
         for(int i=0;i<bucketList.size();i++) {
-
+            JSONObject objTemp = new JSONObject();
             if(bucketList.get(i).getChildrenCount()>0) {
-                children.add(createChildrenBuckets(bucketList.get(i).getChildren()));
+
+
+                objTemp.put("name", bucketList.get(i).getName());
+                objTemp.put("rowRange", (bucketList.get(i).getStartPos()+1) + "---" + (bucketList.get(i).getEndPos()+1));
+                objTemp.put("size", bucketList.get(i).getSize());
+                objTemp.put("children", createChildrenBuckets(bucketList.get(i).getChildren()));
             }
             else
             {
-                JSONObject objTemp = new JSONObject();
-
                 objTemp.put("name", bucketList.get(i).getName());
                 objTemp.put("rowRange", (bucketList.get(i).getStartPos()+1) + "---" + (bucketList.get(i).getEndPos()+1));
                 objTemp.put("size", bucketList.get(i).getSize());
                 objTemp.put("subCat", 0);
 
-                children.add(objTemp);
-            }
-        }
-        obj.put("children", children);
 
-        return obj;
+            }
+
+            children.add(objTemp);
+        }
+
+        return children;
     }
 
    private void createNavSTree(ArrayList<Bucket<String>> bucketList) {
+       JSONObject obj = new JSONObject();
 
-        Clients.evalJavaScript("display('" + createChildrenBuckets(bucketList).toJSONString() + "');");
+       String max = bucketList.get(bucketList.size()-1).getMaxValue();
+       String min = bucketList.get(0).getMinValue();
+       int start = bucketList.get(0).getStartPos();
+       int end = bucketList.get(bucketList.size()-1).getEndPos();
+
+       if(max == null || min == null)
+       {
+           String tmp = bucketList.get(bucketList.size()-1).getName();
+
+           if(tmp.contains("Rows:")) {
+               tmp = tmp.split(":")[1];
+           }
+
+           max = tmp.split("-")[1];
+           min = tmp.split("-")[0];
+
+       }
+       obj.put("name", min.equals(max)?min:min+" to "+max);
+       obj.put("rowRange", (start+1) + "---" + (end+1));
+       obj.put("size", end-start+1);
+       obj.put("subCat", bucketList.size());
+
+       obj.put("children", createChildrenBuckets(bucketList));
+
+       //System.out.println(obj);
+
+        Clients.evalJavaScript("display('" + obj + "');");
 
         //treeBucket.setAutopaging(true);
         /*BucketTreeNodeCollection<Bucket<String>> btnc = new BucketTreeNodeCollection<Bucket<String>>();
