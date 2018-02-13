@@ -1248,6 +1248,7 @@ public class AppCtrl extends CtrlBase<Component> {
                 objTemp.put("name", bucketList.get(i).getName());
                 objTemp.put("rowRange", (bucketList.get(i).getStartPos()+1) + "---" + (bucketList.get(i).getEndPos()+1));
                 objTemp.put("size", bucketList.get(i).getSize());
+                objTemp.put("subCat", bucketList.get(i).getChildrenCount());
                 objTemp.put("children", createChildrenBuckets(bucketList.get(i).getChildren()));
             }
             else
@@ -1293,7 +1294,7 @@ public class AppCtrl extends CtrlBase<Component> {
 
        obj.put("children", createChildrenBuckets(bucketList));
 
-       //System.out.println(obj);
+       System.out.println(obj);
 
         Clients.evalJavaScript("display('" + obj + "');");
 

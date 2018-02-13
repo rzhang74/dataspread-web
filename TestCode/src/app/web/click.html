@@ -112,9 +112,9 @@ rect.parent,
   <strong>Navigate</strong>
   <form class="buttons">
   <label><input type="radio" name="mode" value="party" onclick="javascript:window.location.href='http://localhost:8080/index.html'; return false;"> Slice</label>
-  <label><input type="radio" name="mode" onclick="javascript:window.location.href='http://localhost:8080/dice.html'; return false;" value="donor" checked> Dice</label>
+  <label><input type="radio" name="mode" onclick="javascript:window.location.href='http://localhost:8080/dice.html'; return false;" value="donor"> Dice</label>
   <label><input type="radio" name="mode" onclick="javascript:window.location.href='http://localhost:8080/sq.html'; return false;" value="donor"> Squarify</label>
-  <label><input type="radio" name="mode" onclick="javascript:window.location.href='http://localhost:8080/click.html'; return false;" value="donor"> Click</label>
+  <label><input type="radio" name="mode" onclick="javascript:window.location.href='http://localhost:8080/click.html'; return false;" value="donor" checked> Click</label>
  </form>
 </div>
 
@@ -126,7 +126,7 @@ rect.parent,
 
   // Largeur de la width
   var obj = document.getElementById('chart');
-  var divWidth = obj.offsetWidth;
+  var divWidth = obj.offsetWidth/3;
 
   var margin = {top: 30, right: 0, bottom: 20, left: 0},
     width = divWidth -25,
@@ -153,7 +153,7 @@ rect.parent,
   // introduce color scale here
   var treemap = d3.layout.treemap()
     .children(function(d, depth) { return depth ? null : d._children; })
-    .mode("dice")
+    .mode("slice")
     .sort(function(a, b) { return b.name.localeCompare(a.name); })
     .ratio(height / width * 0.5 * (1 + Math.sqrt(5)))
     .round(false);
@@ -249,7 +249,7 @@ rect.parent,
       d._children.forEach(function(c) {
         
         /****swap for horizontal partition****/
-        //c = swapForPartition(c);
+        c = swapForPartition(c);
 
       /********/  
       c.x = d.x + c.x * d.dx;
@@ -295,107 +295,147 @@ rect.parent,
     display(root);
 
     function display(d) {
-    grandparent
-      .datum(d.parent)
-      .on("click", transition)
-        .select("text")
-      .text(name(d))
+      grandparent
+        .datum(d.parent)
+        .on("click", transition)
+          .select("text")
+        .text(name(d))
 
-    // color header based on grandparent's rate
-    grandparent
-      .datum(d.parent)
-      .select("rect")
-      .attr("fill", function(){console.log(color(d.rate)); return color(0.05)})
-      
+      // color header based on grandparent's rate
+      grandparent
+        .datum(d.parent)
+        .select("rect")
+        .attr("fill", function(){console.log(color(d.rate)); return color(0.05)})
+        
 
-    var g1 = svg.insert("g", ".grandparent")
-      .datum(d)
-      .attr("class", "depth");
+      var g1 = svg.insert("g", ".grandparent")
+        .datum(d)
+        .attr("class", "depth");
 
-    var g = g1.selectAll("g")
-      .data(d._children)
-        .enter().append("g");
+      var g = g1.selectAll("g")
+        .data(d._children)
+          .enter().append("g")
+          .attr("id",function(d,i){return "rect"+i})
+          .attr("toggled",'false');
 
-    g.filter(function(d) { return d._children; })
-      .classed("children", true)
-      .on("click", transition)
-      .on('mousemove', function(d){return toolTip(d)})
-        .on('mouseout', function(d){return toolTipOff(d)});
+      g.filter(function(d) { return d._children; })
+        .classed("children", true)
+        .on('mousemove', function(d){return toolTip(d)})
+          .on('mouseout', function(d){return toolTipOff(d)})
+          .call(cc);
 
-    g.selectAll(".child")
-      .data(function(d) { return d._children || [d]; })
-      .enter().append("rect")
-      .attr("class", "child")
-      .call(rect);
+      g.selectAll(".child")
+        .data(function(d) { return d._children || [d]; })
+        .enter().append("rect")
+        .attr("class", "child")
+        .call(rect);
 
-      
-    g.append("rect")
-      .attr("class", "parent")
-      .call(rect)
-      .append("title");
-     
-      
-    
-    /* Adding a foreign object instead of a text object, allows for text wrapping */
-    g.append("foreignObject")
+        
+      g.append("rect")
+        .attr("class", "parent")
+        .attr("id","parentRect")
         .call(rect)
-        /* open new window based on the json's URL value for leaf nodes */
-        /* Firefox displays this on top 
-        .on("click", function(d) { 
-          if(!d.children){
-            window.open(d.url); 
-        }
-      })*/
-      .attr("class","foreignobj")
-      .append("xhtml:div") 
-      .attr("dy", ".75em")
-      .html(function(d) { return '' +
-        ' <p class="title"> ' + d.name + ', Rows: '+d.value+', Range: '+getRange(d.rowRange)+'</p>'; 
-        ;})
-      .attr("class","textdiv"); //textdiv class allows us to style the text easily with CSS
-
-    function transition(d) {
-      if (transitioning || !d) return;
-      transitioning = true;
-
-      var g2 = display(d),
-        t1 = g1.transition().duration(650),
-        t2 = g2.transition().duration(650);
-
-      // Update the domain only after entering new elements.
-      x.domain([d.x, d.x + d.dx]);
-      y.domain([d.y, d.y + d.dy]);
-
-      // Enable anti-aliasing during the transition.
-      svg.style("shape-rendering", null);
-
-      // Draw child nodes on top of parent nodes.
-      svg.selectAll(".depth").sort(function(a, b) { return a.depth - b.depth; });
-
-      // Fade-in entering text.
-      g2.selectAll("text").style("fill-opacity", 0);
-      g2.selectAll("foreignObject div").style("display", "none"); /*added*/
-
-      // Transition to the new view.
-      t1.selectAll("text").call(text).style("fill-opacity", 0);
-      t2.selectAll("text").call(text).style("fill-opacity", 1);
-      t1.selectAll("rect").call(rect);
-      t2.selectAll("rect").call(rect);
+        .append("title");
+       
+        
       
-      /* Foreign object */
-      t1.selectAll(".textdiv").style("display", "none"); /* added */
-      t1.selectAll(".foreignobj").call(foreign); /* added */
-      t2.selectAll(".textdiv").style("display", "block"); /* added */
-      t2.selectAll(".foreignobj").call(foreign); /* added */      
+      /* Adding a foreign object instead of a text object, allows for text wrapping */
+      g.append("foreignObject")
+          .call(rect)
+          /* open new window based on the json's URL value for leaf nodes */
+          /* Firefox displays this on top 
+          .on("click", function(d) { 
+            if(!d.children){
+              window.open(d.url); 
+          }
+        })*/
+        .attr("class","foreignobj")
+        .append("xhtml:div") 
+        .attr("dy", ".75em")
+        .html(function(d) { return '' +
+          ' <p class="title"> ' + d.name + ', Rows: '+d.value+', Range: '+getRange(d.rowRange)+'</p>'; 
+          ;})
+        .attr("class","textdiv"); //textdiv class allows us to style the text easily with CSS
 
-      // Remove the old node when the transition is finished.
-      t1.remove().each("end", function() {
-      svg.style("shape-rendering", "crispEdges");
-      transitioning = false;
+      function transition(d) {
+        if (transitioning || !d) return;
+        transitioning = true;
+
+        var g2 = display(d),
+          t1 = g1.transition().duration(650),
+          t2 = g2.transition().duration(650);
+
+        // Update the domain only after entering new elements.
+        x.domain([d.x, d.x + d.dx]);
+        y.domain([d.y, d.y + d.dy]);
+
+        // Enable anti-aliasing during the transition.
+        svg.style("shape-rendering", null);
+
+        // Draw child nodes on top of parent nodes.
+        svg.selectAll(".depth").sort(function(a, b) { return a.depth - b.depth; });
+
+        // Fade-in entering text.
+        g2.selectAll("text").style("fill-opacity", 0);
+        g2.selectAll("foreignObject div").style("display", "none"); /*added*/
+
+        // Transition to the new view.
+        t1.selectAll("text").call(text).style("fill-opacity", 0);
+        t2.selectAll("text").call(text).style("fill-opacity", 1);
+        t1.selectAll("rect").call(rect);
+        t2.selectAll("rect").call(rect);
+        
+        /* Foreign object */
+        t1.selectAll(".textdiv").style("display", "none"); /* added */
+        t1.selectAll(".foreignobj").call(foreign); /* added */
+        t2.selectAll(".textdiv").style("display", "block"); /* added */
+        t2.selectAll(".foreignobj").call(foreign); /* added */      
+
+        // Remove the old node when the transition is finished.
+        t1.remove().each("end", function() {
+        svg.style("shape-rendering", "crispEdges");
+        transitioning = false;
+        });
+      }
+
+      cc.on('click', function(c,index) {
+
+        var elem = document.getElementById('rect'+index);
+        
+        var children = elem.getElementsByTagName('rect');// any tag could be used here..
+
+        for(var i = 0; i< children.length;i++)
+        {
+          if (children[i].getAttribute('id') == 'parentRect') // any attribute could be used here
+          {
+           // do what ever you want with the element..  
+           // children[i] holds the element at the moment..
+           if(elem.getAttribute('toggled')=='false')
+           {
+            elem.setAttribute('toggled','true');
+             children[i].setAttribute('fill','#D3D3D3');
+           }
+           
+          
+          else
+          {
+            children[i].setAttribute('fill',color(0.1));
+            
+          }
+            
+
+           
+
+          }
+        }
+        
       });
-    }
+      cc.on('dblclick', function(c, index) {
+       // console.log("double click");
+         transition(c);
+      });
 
-    return g;
+      return g;
     }
 
     function text(text) {
@@ -404,6 +444,7 @@ rect.parent,
   }
     
     function rect(rect) {
+      console.log(rect);
     rect.attr("x", function(d) { return x(d.x); })
       .attr("y", function(d) { return y(d.y); })
       .attr("width", function(d) { return x(d.x + d.dx) - x(d.x); })
@@ -429,6 +470,7 @@ rect.parent,
       ? name(d.parent) + " - " + d.name 
       : d.name;
     }
+
     
   });
 
@@ -464,13 +506,12 @@ rect.parent,
 
   function toolTipOff(d) {
     tip.style('opacity',0);
-    console.log("Tip OFF: "+d);
+    
   };
 
 
   function drawBarChart(d)
   {
-    console.log(d);
     var data = d._children;
     var tipMargin = {
             top: 5,
@@ -503,16 +544,6 @@ rect.parent,
 
 
 
-    console.log(data);
-    console.log(d3.max(data, function (c) {
-              
-                return c.value;
-            }));
-    
-    for(var i=0;i<data.length;i++)
-    {
-      console.log(data[i].value+", width: "+tipx(data[i].value))
-    }
     var tipy = d3.scale.ordinal()
         .rangeRoundBands([tipHeight, 0], .1)
         .domain(data.map(function (c) {
@@ -566,6 +597,45 @@ rect.parent,
 
 
   }
+
+function clickcancel() {
+  // we want to a distinguish single/double click
+  // details http://bl.ocks.org/couchand/6394506
+  var event = d3.dispatch('click', 'dblclick');
+  function cc(selection) {
+      var down, tolerance = 5, last, wait = null, args;
+      // euclidean distance
+      function dist(a, b) {
+          return Math.sqrt(Math.pow(a[0] - b[0], 2), Math.pow(a[1] - b[1], 2));
+      }
+      selection.on('mousedown', function() {
+          down = d3.mouse(document.body);
+          last = +new Date();
+          args = arguments;
+      });
+      selection.on('mouseup', function() {
+          if (dist(down, d3.mouse(document.body)) > tolerance) {
+              return;
+          } else {
+              if (wait) {
+                  window.clearTimeout(wait);
+                  wait = null;
+                  event.dblclick.apply(this, args);
+              } else {
+                  wait = window.setTimeout((function() {
+                      return function() {
+                          event.click.apply(this, args);
+                          wait = null;
+                      };
+                  })(), 300);
+              }
+          }
+      });
+  };
+  return d3.rebind(cc, event, 'on');
+}
+
+var cc = clickcancel();
 
 </script>
 
