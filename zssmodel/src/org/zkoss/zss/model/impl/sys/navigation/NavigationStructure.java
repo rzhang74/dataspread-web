@@ -1,4 +1,4 @@
-package org.zkoss.zss.model.impl;
+package org.zkoss.zss.model.impl.sys.navigation;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.model.AutoRollbackConnection;
 import org.model.DBHandler;
+import org.zkoss.zss.model.impl.sys.navigation.Bucket;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

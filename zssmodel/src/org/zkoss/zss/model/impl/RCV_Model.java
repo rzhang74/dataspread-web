@@ -10,14 +10,16 @@ import org.postgresql.copy.CopyIn;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.jdbc.PgConnection;
 import org.zkoss.zss.model.CellRegion;
-import org.zkoss.zss.model.ModelEvents;
 import org.zkoss.zss.model.SCell;
 import org.zkoss.zss.model.SSheet;
 import org.zkoss.zss.model.impl.statistic.AbstractStatistic;
 import org.zkoss.zss.model.impl.statistic.CombinedStatistic;
 import org.zkoss.zss.model.impl.statistic.CountStatistic;
 import org.zkoss.zss.model.impl.statistic.KeyStatistic;
-
+import org.zkoss.zss.model.impl.sys.navigation.Bucket;
+import org.zkoss.zss.model.impl.sys.navigation.NavigationStructure;
+import org.zkoss.zss.model.sys.navigation.NavigationAsyncScheduler;
+import org.zkoss.zss.model.impl.sys.navigation.NavigationSchedulerSimple;
 import java.io.IOException;
 import java.io.Reader;
 import java.sql.*;
@@ -361,6 +363,113 @@ public class RCV_Model extends Model {
 
     }
 
+
+    public ArrayList<Bucket<String>> createNavSOnDemand(SSheet currentSheet, int start, int count) {
+        //load sorted data from table
+        ArrayList<String> recordList =  new ArrayList<String>();
+
+
+        StringBuffer select = null;
+
+        if(this.indexString==null)
+        {
+            /*trueOrder = new HashMap<Integer,Integer>();
+
+            for(int i=1;i<currentSheet.getEndRowIndex()+2;i++)
+                trueOrder.put(i,i);*/
+
+            ArrayList<Bucket<String>> newList = this.navS.getUniformBuckets(0,currentSheet.getEndRowIndex());
+            return newList;
+        }
+
+        Hybrid_Model hybrid_model = (Hybrid_Model) this;
+        ROM_Model rom_model = (ROM_Model) hybrid_model.tableModels.get(0).y;
+
+        /*int columnIndex = Integer.parseInt(indexString.split("_")[1])-1;
+        CellRegion tableRegion =  new CellRegion(1, columnIndex,//100000,20);
+                currentSheet.getEndRowIndex(),columnIndex);
+
+        ArrayList<SCell> result = (ArrayList<SCell>) currentSheet.getCells(tableRegion);
+
+        Collections.sort(result, Comparator.comparing(SCell::getStringValue));*/
+
+        int columnIndex = Integer.parseInt(indexString.split("_")[1])-1;
+
+        CellRegion tableRegion =  new CellRegion(1, columnIndex,//100000,20);
+                currentSheet.getEndRowIndex(),columnIndex);
+
+        currentSheet.clearCache();
+        ArrayList<SCell> result = (ArrayList<SCell>) currentSheet.getCells(tableRegion);
+
+
+
+        try (AutoRollbackConnection connection = DBHandler.instance.getConnection()) {
+            DBContext context = new DBContext(connection);
+
+            ArrayList<Integer> rowIds=null;
+
+            if(rom_model.rowOrderTable.keySet().isEmpty()) {
+                rowIds = rom_model.rowMapping.getIDs(context, tableRegion.getRow(), tableRegion.getLastRow() - tableRegion.getRow() + 1);
+            }
+            else
+            {
+                CombinedStatistic startRow = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(tableRegion.getRow()-1));//-1 to acount for the header which is not inserted
+                rowIds = rom_model.rowOrderTable.get(hybrid_model.tableModels.get(0).y.indexString).getIDs(context, startRow, tableRegion.getLastRow() - tableRegion.getRow() + 1,AbstractStatistic.Type.COUNT);
+            }
+
+            ArrayList<Integer> ids = new ArrayList<>();
+            ArrayList<CombinedStatistic> statistics = new ArrayList<>();
+
+            for(int i = 0; i < rowIds.size(); i++) {
+                ids.add(rowIds.get(i));
+                statistics.add(new CombinedStatistic(new KeyStatistic(result.get(i).getStringValue())));
+                recordList.add(result.get(i).getStringValue());
+            }
+
+
+
+            /*for(int i=1;i<ids.size();i++)
+                trueOrder.put(i+1,ids.get(i));
+
+
+            rom_model.rowCombinedTree.dropSchema(context);
+            rom_model.rowCombinedTree = new CombinedBTree(context, tableName + "_row_com_idx");
+            rom_model.rowCombinedTree.insertIDs(context,statistics,ids);*/
+
+            if(rom_model.rowOrderTable.containsKey(indexString))
+                rom_model.rowCombinedTree = rom_model.rowOrderTable.get(indexString);
+            else{
+                CombinedBTree newOrder = new CombinedBTree(context, tableName + "_row_com_"+indexString+"_idx");
+                newOrder.insertIDs(context,statistics,ids);
+
+                rom_model.rowOrderTable.put(indexString,newOrder);
+
+                rom_model.rowCombinedTree = newOrder;
+
+                hybrid_model.tableModels.get(0).y.indexString = indexString;
+
+
+            }
+            connection.commit();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+
+        /*NavigationAsyncScheduler navigationAsyncScheduler = new NavigationSchedulerSimple();
+        Thread thread = new Thread(navigationAsyncScheduler);
+        thread.start();*/
+        //create nav data structure
+        Collections.sort(recordList);//TODO: replace by BTree getKeys() function
+        this.navS.setRecordList(recordList);
+        ArrayList<Bucket<String>> newList = this.navS.getNonOverlappingBuckets(0,recordList.size()-1);//getBucketsNoOverlap(0,recordList.size()-1,true);
+
+        //addByCount(context, pos + i, ids[i], false);
+        return newList;
+
+    }
     @Override
     public ArrayList<String> getHeaders()
     {

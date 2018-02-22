@@ -3,13 +3,14 @@ package org.zkoss.zss.model.impl;
 import org.model.DBContext;
 import org.zkoss.zss.model.CellRegion;
 import org.zkoss.zss.model.SSheet;
+import org.zkoss.zss.model.impl.sys.navigation.Bucket;
+import org.zkoss.zss.model.impl.sys.navigation.NavigationStructure;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 
 public abstract class Model {
     protected String tableName;
