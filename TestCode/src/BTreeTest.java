@@ -137,9 +137,9 @@ public class BTreeTest {
         }*/
 
         try{
-            int [] balance_ff={20,50,100,150,200};
+            int [] balance_ff={100};
             for(int i=0;i<balance_ff.length;i++) {
-                BufferedWriter bw = new BufferedWriter(new FileWriter("balance_rand_"+balance_ff[i]+".csv"));
+                BufferedWriter bw = new BufferedWriter(new FileWriter("balance_rand_cache_"+balance_ff[i]+".csv"));
 
                 bw.write("Fill Factor,Trial, Insert Time Unsorted (ms), Insert Time Sorted (ms),Create-Update (unsorted), Get (unsorted), Create-Update (sorted), Get (sorted)\n");
                 for (int trial = 0; trial < 10; trial++) {
@@ -209,7 +209,7 @@ public class BTreeTest {
         ArrayList<Integer> ids = new ArrayList<>();
         ArrayList<CombinedStatistic> statistics = new ArrayList<>();
 
-        CombinedBTree testTree = new CombinedBTree(context, tableName,true);
+        CombinedBTree testTree = new CombinedBTree(context, null,true);
         testTree.setBlockSize(fillFactor);
 
         ArrayList<CounterObject> insertTime = new ArrayList<CounterObject>();
@@ -239,7 +239,7 @@ public class BTreeTest {
         }
 
         Collections.sort(ls);
-        CombinedBTree testTree2 = new CombinedBTree(context, tableName,true);
+        CombinedBTree testTree2 = new CombinedBTree(context, null,true);
         testTree2.setBlockSize(fillFactor);
 
         for(int i=0;i<initSize;i++)

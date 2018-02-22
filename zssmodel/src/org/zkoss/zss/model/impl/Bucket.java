@@ -25,7 +25,7 @@ public class Bucket<T> implements Serializable{
     public String toString() {
         if (minValue==null || maxValue==null)
             return null;
-        return minValue.toString().equals(maxValue.toString())?minValue.toString():minValue.toString()+" to "+maxValue.toString();
+        return minValue.toString().equals(maxValue.toString())?minValue.toString():minValue.toString()+" - "+maxValue.toString();
     }
 
     public T getMaxValue(){return  maxValue;}
@@ -64,7 +64,7 @@ public class Bucket<T> implements Serializable{
     }
 
     public String getSummary(){
-        summary = "Name: "+ this.getName()+"\n";
+        summary = this.getName()+"\n";
         summary += "Sub-categories: " + this.childrenCount+"\n";
         summary += "[Start,End]: ["+(this.startPos+2)+","+(this.endPos+2)+"]\n";
         summary += "Rows: "+this.size;
