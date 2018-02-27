@@ -8,6 +8,7 @@ import org.zkoss.zss.app.impl.BookManagerImpl;
 import org.zkoss.zss.app.repository.BookRepositoryFactory;
 import org.zkoss.zss.model.impl.sys.formula.FormulaAsyncSchedulerSimple;
 import org.zkoss.zss.model.sys.formula.FormulaAsyncScheduler;
+import org.zkoss.zss.model.sys.navigation.NavigationTaskManager;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -50,5 +51,6 @@ public class ServletContextListenerImpl implements ServletContextListener, Seria
 		}
 		//TODO save unfinished tasks
 		FormulaAsyncScheduler.getScheduler().shutdown();
+		NavigationTaskManager.getInstance().shutDown();
 	}
 }

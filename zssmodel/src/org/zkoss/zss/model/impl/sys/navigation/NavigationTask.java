@@ -6,7 +6,7 @@ import org.zkoss.zss.model.SSheet;
 import org.zkoss.zss.model.impl.CellImpl;
 import org.zkoss.zss.model.sys.BookBindings;
 import org.zkoss.zss.model.sys.formula.DirtyManager;
-import org.zkoss.zss.model.sys.navigation.NavigationAsyncScheduler;
+
 
 import java.util.Collection;
 import java.util.logging.Logger;
@@ -14,21 +14,18 @@ import java.util.logging.Logger;
 /**
  * Execute formulae in a single thread.
  */
-public class NavigationSchedulerSimple extends NavigationAsyncScheduler {
-    private static final Logger logger = Logger.getLogger(NavigationSchedulerSimple.class.getName());
+public class NavigationTask extends Thread {
+    private static final Logger logger = Logger.getLogger(NavigationTask.class.getName());
     private boolean keepRunning = true;
 
     @Override
     public void run() {
         while (keepRunning) {
-
+            //TODO: code for creating navigation structure
         }
     }
 
-    @Override
     public void shutdown() {
         keepRunning = false;
     }
-
-
 }

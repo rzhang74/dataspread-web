@@ -325,6 +325,7 @@ public class MainMenubarCtrl extends CtrlBase<Menubar> {
 		else {
 			win.getFellow("navs").setVisible(true);
 			((Div)win.getFellow("navs")).setWidth("400px");
+
 		}
 	}
 	

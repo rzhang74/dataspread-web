@@ -49,6 +49,7 @@ import org.zkoss.zss.app.ui.dlg.*;
 import org.zkoss.zss.model.*;
 import org.zkoss.zss.model.impl.sys.navigation.Bucket;
 import org.zkoss.zss.model.impl.SheetImpl;
+import org.zkoss.zss.model.sys.navigation.NavigationTaskManager;
 import org.zkoss.zss.ui.*;
 import org.zkoss.zss.ui.Version;
 import org.zkoss.zss.ui.event.Events;
@@ -327,8 +328,12 @@ public class AppCtrl extends CtrlBase<Component> {
                 currentSheet.clearCache();
             }
 
+
+            //Todo: launch Navigation task manager here
             ss.setNavSBuckets(currentSheet.getDataModel().createNavS(currentSheet, 0, 0));
-            createNavSTree(ss.getNavSBuckets());
+
+            //Todo: call createNavS tree when user selects the navigation panel
+            createNavSTree();
 
             currentSheet.fullRefresh();
 
@@ -1236,13 +1241,13 @@ public class AppCtrl extends CtrlBase<Component> {
         return dtnc;
     }
 
-   private void createNavSTree(ArrayList<Bucket<String>> bucketList) {
+   private void createNavSTree() {
 
         //treeBucket.setAutopaging(true);
         BucketTreeNodeCollection<Bucket<String>> btnc = new BucketTreeNodeCollection<Bucket<String>>();
         navSBucketMap.clear();
         navSBucketLevel.clear();
-        btnc = childrenBuckets(bucketList,0);
+        btnc = childrenBuckets(ss.getNavSBuckets(),0);
 
         treeBucket.setModel(new DefaultTreeModel<Bucket<String>>(new BucketTreeNode<Bucket<String>>(null,btnc)));
 

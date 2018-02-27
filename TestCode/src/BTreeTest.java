@@ -137,7 +137,7 @@ public class BTreeTest {
         }*/
 
         try{
-            int [] balance_ff={100};
+            int [] balance_ff={20,50,100,150,200};
             for(int i=0;i<balance_ff.length;i++) {
                 BufferedWriter bw = new BufferedWriter(new FileWriter("balance_rand_cache_"+balance_ff[i]+".csv"));
 
@@ -154,7 +154,7 @@ public class BTreeTest {
             }
         }catch(Exception e)
         {
-
+            e.printStackTrace();
         }
     }
 

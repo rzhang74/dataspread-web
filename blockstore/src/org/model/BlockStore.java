@@ -26,7 +26,6 @@ public class BlockStore {
      * Logging
      */
     final int CACHE_SIZE = 1000;
-    final int CACHE_EVICT = 100;
     /* Table that persists the block store */
     private String dataStore;
     public int getCount=0;
@@ -62,9 +61,9 @@ public class BlockStore {
         this.dataStore = dataStore;
         if (dataStore == null) {
             // Infinite cache size for in memory
-            blockCache = new LruCache<>(-1,0);
+            blockCache = new LruCache<>(-1);
         } else {
-            blockCache = new LruCache<>(CACHE_SIZE, CACHE_EVICT);
+            blockCache = new LruCache<>(CACHE_SIZE);
             createSchema(context, dataStore);
         }
         //logger.info("BlockStore created - " + dataStore);
