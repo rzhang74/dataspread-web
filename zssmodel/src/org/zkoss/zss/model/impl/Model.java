@@ -13,7 +13,7 @@ import java.util.Collection;
 import java.util.HashMap;
 
 public abstract class Model {
-    protected String tableName;
+    public String tableName;
     protected SSheet sheet;
     public ArrayList<Bucket<String>> navSbuckets;
     public NavigationStructure navS;
@@ -102,6 +102,8 @@ public abstract class Model {
 
     // Clone only the corresponding tables in postgres
     public abstract Model clone(DBContext dbContext, SSheet sheet, String modelName);
+
+    public abstract ROM_Model getROM_Model();
 
     public abstract ArrayList<Bucket<String>> createNavS(SSheet currentsheet, int start, int count);
 

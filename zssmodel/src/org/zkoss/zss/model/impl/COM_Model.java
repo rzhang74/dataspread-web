@@ -45,6 +45,13 @@ public class COM_Model extends Model {
     }
 
     @Override
+    public ROM_Model getROM_Model() {
+        ROM_Model rom_model=null;
+
+        return rom_model;
+    }
+
+    @Override
     public void dropSchema(DBContext context) {
         rom_model.dropSchema(context);
     }

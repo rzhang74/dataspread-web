@@ -18,8 +18,6 @@ import org.zkoss.zss.model.impl.statistic.CountStatistic;
 import org.zkoss.zss.model.impl.statistic.KeyStatistic;
 import org.zkoss.zss.model.impl.sys.navigation.Bucket;
 import org.zkoss.zss.model.impl.sys.navigation.NavigationStructure;
-import org.zkoss.zss.model.sys.navigation.NavigationAsyncScheduler;
-import org.zkoss.zss.model.impl.sys.navigation.NavigationSchedulerSimple;
 import java.io.IOException;
 import java.io.Reader;
 import java.sql.*;
@@ -189,6 +187,14 @@ public class RCV_Model extends Model {
 
     }
 
+    @Override
+    public ROM_Model getROM_Model() {
+        Hybrid_Model hybrid_model = (Hybrid_Model) this;
+        ROM_Model rom_model;
+        rom_model = (ROM_Model) hybrid_model.tableModels.get(0).y;
+
+        return rom_model;
+    }
 
     @Override
     public ArrayList<Bucket<String>> createNavS(SSheet currentSheet, int start, int count) {

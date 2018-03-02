@@ -330,6 +330,7 @@ public class AppCtrl extends CtrlBase<Component> {
 
 
             //Todo: launch Navigation task manager here
+            //NavigationTaskManager.getInstance().startNavigationBuilderTask(currentSheet);
             ss.setNavSBuckets(currentSheet.getDataModel().createNavS(currentSheet, 0, 0));
 
             //Todo: call createNavS tree when user selects the navigation panel

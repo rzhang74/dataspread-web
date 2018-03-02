@@ -744,6 +744,12 @@ public class ROM_Model extends Model {
     }
 
     @Override
+    public ROM_Model getROM_Model() {
+
+        return this;
+    }
+
+    @Override
     public ArrayList<Bucket<String>> createNavS(SSheet currentSheet, int start, int count) {
         ArrayList<Bucket<String>> newList = this.navS.getUniformBuckets(0,currentSheet.getEndRowIndex());
         return newList;

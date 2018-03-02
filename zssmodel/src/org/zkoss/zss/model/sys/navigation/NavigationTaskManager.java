@@ -1,6 +1,7 @@
 package org.zkoss.zss.model.sys.navigation;
 
 
+import org.zkoss.zss.model.impl.SheetImpl;
 import org.zkoss.zss.model.impl.sys.navigation.NavigationTask;
 
 import java.util.ArrayList;
@@ -14,9 +15,9 @@ public abstract class NavigationTaskManager {
         navigationTasks = new ArrayList<>();
     }
 
-    public void startNavigationBuilderTask()
+    public void startNavigationBuilderTask(SheetImpl currentSheet)
     {
-        NavigationTask navigationTask = new NavigationTask();
+        NavigationTask navigationTask = new NavigationTask(currentSheet);
         navigationTasks.add(navigationTask);
         navigationTask.start();
 

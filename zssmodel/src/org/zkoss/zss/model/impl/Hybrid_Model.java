@@ -78,6 +78,14 @@ public class Hybrid_Model extends RCV_Model {
         }
     }
 
+    @Override
+    public ROM_Model getROM_Model() {
+        ROM_Model rom_model;
+        rom_model = (ROM_Model) this.tableModels.get(0).y;
+
+        return rom_model;
+    }
+
     /* For All the TOM models that display the range adjust the rnage */
     public void shrinkRange(String tableName) {
 
