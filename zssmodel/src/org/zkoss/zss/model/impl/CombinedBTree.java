@@ -4,6 +4,7 @@ import org.model.BlockStore;
 import org.model.DBContext;
 import org.zkoss.zss.model.impl.statistic.AbstractStatistic;
 import org.zkoss.zss.model.impl.statistic.CombinedStatistic;
+import org.zkoss.zss.model.impl.statistic.CountStatistic;
 import org.zkoss.zss.model.impl.statistic.KeyStatistic;
 
 import java.util.ArrayList;
@@ -38,6 +39,28 @@ public class CombinedBTree{
         return btree.getIDs(context, statistic, count, type);
     }
 
+    public ArrayList getKeys(DBContext context, int start, int count) {
+
+        int jump = count/10;
+        ArrayList values=new ArrayList();
+
+        CombinedStatistic statistic = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(start));//-1 to acount for the header which is not inserted
+        if(jump == 0) {
+            values= btree.getIDs(context, statistic, count, AbstractStatistic.Type.COUNT);
+            return values;
+        }
+
+        ArrayList keys = new ArrayList();
+
+        for(int i=0;i<10;i++) {
+            start += jump*i;
+            statistic = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(start));//-1 to acount for the header which is not inserted
+            values = btree.getIDs(context, statistic, 1, AbstractStatistic.Type.COUNT);
+            keys.add(values.get(0));
+        }
+
+        return keys;
+    }
 
     public ArrayList deleteIDs(DBContext context, ArrayList<CombinedStatistic> statistics, AbstractStatistic.Type type) {
         return btree.deleteIDs(context, statistics, type);

@@ -320,17 +320,27 @@ public class AppCtrl extends CtrlBase<Component> {
                 treeBucket.setModel(new DefaultTreeModel<Bucket<String>>(new BucketTreeNode<Bucket<String>>(null,new BucketTreeNodeCollection<Bucket<String>>())));
                 return;
             }
+
             if(index==-1)
                 updateColModel(currentSheet);
             else
             {
-                currentSheet.getDataModel().setIndexString("col_"+index);
+                currentSheet.getDataModel().setOrderString("col_"+index);
                 currentSheet.clearCache();
             }
 
+            /*if(currentSheet.getDataModel().getOrder()!=null)
+            {
+                //Todo: launch Navigation task manager here
+                //create nav structure from BTree
+            }
+            else
+            {
+                //Todo: launch Navigation task manager here
+                //NavigationTaskManager.getInstance().startNavigationBuilderTask(currentSheet);
 
-            //Todo: launch Navigation task manager here
-            //NavigationTaskManager.getInstance().startNavigationBuilderTask(currentSheet);
+            }*/
+
             ss.setNavSBuckets(currentSheet.getDataModel().createNavS(currentSheet, 0, 0));
 
             //Todo: call createNavS tree when user selects the navigation panel

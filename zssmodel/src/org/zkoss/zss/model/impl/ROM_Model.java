@@ -395,7 +395,7 @@ public class ROM_Model extends Model {
             return cells;
         ArrayList<Integer> rowIds;
         ArrayList<Integer> colIds;
-        if(indexString==null)
+        if(getOrderString()==null)
         {
             rowIds = rowMapping.getIDs(context, fetchRegion.getRow(), fetchRegion.getLastRow() - fetchRegion.getRow() + 1);
             colIds = colMapping.getIDs(context, fetchRegion.getColumn(), fetchRegion.getLastColumn() - fetchRegion.getColumn() + 1);
@@ -592,7 +592,7 @@ public class ROM_Model extends Model {
 
                     headerStringSS = headerSS.toString();
                     valuesString = values.toString();
-                    indexString = "col_"+(selectedCol+1);//nextLine[selectedCol];
+                    setOrderString("col_"+(selectedCol+1));//nextLine[selectedCol];
 
                     sbSS.append("INSERT into "+tableName+" ("+headerStringSS+") values(?,"+valuesString+")");
 
@@ -610,13 +610,12 @@ public class ROM_Model extends Model {
                     pstSS = null;
                     createIndexOnSortAttr(selectedCol);
                     navS.setHeaderString(headerStringSS);
-                    navS.setIndexString(indexString);
+                    navS.setIndexString(getOrderString());
 
                     continue;
                 }
 
                 sbSS.append("INSERT into "+tableName+" ("+headerStringSS+") values(?,"+valuesString+")");
-
 
 
                 pstSS = connection.prepareStatement(sbSS.toString());
@@ -703,10 +702,10 @@ public class ROM_Model extends Model {
 
 
         select = null;
-        if(indexString.length()==0)
+        if(getOrderString().length()==0)
             select = new StringBuffer("SELECT row, col_1");
         else
-            select = new StringBuffer("SELECT row, "+indexString);
+            select = new StringBuffer("SELECT row, "+getOrderString());
 
         select.append(" FROM ")
                 .append(tableName)
@@ -790,10 +789,6 @@ public class ROM_Model extends Model {
 
     }
 
-    @Override
-    public void setIndexString(String str) {
-        this.indexString = str;
-    }
 
     @Override
     public boolean deleteTableColumns(DBContext dbContext, CellRegion cellRegion) {

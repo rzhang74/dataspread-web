@@ -135,17 +135,17 @@ public class RCV_Model extends Model {
 
 
         this.navS.setTotalRows(count+1);
-        if(this.indexString==null)
+        if(this.getOrderString()==null)
         {
             ArrayList<Bucket<String>> newList = this.navS.getUniformBuckets(0,count);
             return newList;
         }
 
-        select = new StringBuffer("SELECT row, "+indexString);
+        select = new StringBuffer("SELECT row, "+this.getOrderString());
 
         select.append(" FROM ")
                 .append(tableName+"_2")
-                .append(" WHERE row !=1 ORDER BY "+indexString);
+                .append(" WHERE row !=1 ORDER BY "+this.getOrderString());
 
         ArrayList<Integer> ids = new ArrayList<Integer>();
 
@@ -204,7 +204,7 @@ public class RCV_Model extends Model {
 
         StringBuffer select = null;
 
-        if(this.indexString==null)
+        if(this.getOrderString()==null)
         {
             /*trueOrder = new HashMap<Integer,Integer>();
 
@@ -218,7 +218,7 @@ public class RCV_Model extends Model {
         Hybrid_Model hybrid_model = (Hybrid_Model) this;
         ROM_Model rom_model = (ROM_Model) hybrid_model.tableModels.get(0).y;
 
-        /*int columnIndex = Integer.parseInt(indexString.split("_")[1])-1;
+        /*int columnIndex = Integer.parseInt(getOrderString().split("_")[1])-1;
         CellRegion tableRegion =  new CellRegion(1, columnIndex,//100000,20);
                 currentSheet.getEndRowIndex(),columnIndex);
 
@@ -226,7 +226,7 @@ public class RCV_Model extends Model {
 
         Collections.sort(result, Comparator.comparing(SCell::getStringValue));*/
 
-        int columnIndex = Integer.parseInt(indexString.split("_")[1])-1;
+        int columnIndex = Integer.parseInt(getOrderString().split("_")[1])-1;
 
         CellRegion tableRegion =  new CellRegion(1, columnIndex,//100000,20);
                 currentSheet.getEndRowIndex(),columnIndex);
@@ -247,7 +247,7 @@ public class RCV_Model extends Model {
             else
             {
                 CombinedStatistic startRow = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(tableRegion.getRow()-1));//-1 to acount for the header which is not inserted
-                rowIds = rom_model.rowOrderTable.get(hybrid_model.tableModels.get(0).y.indexString).getIDs(context, startRow, tableRegion.getLastRow() - tableRegion.getRow() + 1,AbstractStatistic.Type.COUNT);
+                rowIds = rom_model.rowOrderTable.get(hybrid_model.tableModels.get(0).y.getOrderString()).getIDs(context, startRow, tableRegion.getLastRow() - tableRegion.getRow() + 1,AbstractStatistic.Type.COUNT);
             }
 
             ArrayList<Integer> ids = new ArrayList<>();
@@ -269,17 +269,17 @@ public class RCV_Model extends Model {
             rom_model.rowCombinedTree = new CombinedBTree(context, tableName + "_row_com_idx");
             rom_model.rowCombinedTree.insertIDs(context,statistics,ids);*/
 
-            if(rom_model.rowOrderTable.containsKey(indexString))
-                rom_model.rowCombinedTree = rom_model.rowOrderTable.get(indexString);
+            if(rom_model.rowOrderTable.containsKey(getOrderString()))
+                rom_model.rowCombinedTree = rom_model.rowOrderTable.get(getOrderString());
             else{
-                CombinedBTree newOrder = new CombinedBTree(context, tableName + "_row_com_"+indexString+"_idx");
+                CombinedBTree newOrder = new CombinedBTree(context, tableName + "_row_com_"+getOrderString()+"_idx");
                 newOrder.insertIDs(context,statistics,ids);
 
-                rom_model.rowOrderTable.put(indexString,newOrder);
+                rom_model.rowOrderTable.put(getOrderString(),newOrder);
 
                 rom_model.rowCombinedTree = newOrder;
 
-                hybrid_model.tableModels.get(0).y.indexString = indexString;
+                hybrid_model.tableModels.get(0).y.setOrderString(getOrderString());
 
 
             }
@@ -328,14 +328,14 @@ public class RCV_Model extends Model {
             }
         }
 
-        if(this.indexString==null)
+        if(this.getOrderString()==null)
         {
             return this.navS.getUniformBuckets(0,count);
         }
 
         ArrayList<Integer> rowIds = rowMapping.getIDs(context,start,count);
 
-        select = new StringBuffer("SELECT row, "+indexString);
+        select = new StringBuffer("SELECT row, "+getOrderString());
 
         select.append(" FROM ")
                 .append(tableName+"_2")
@@ -377,7 +377,7 @@ public class RCV_Model extends Model {
 
         StringBuffer select = null;
 
-        if(this.indexString==null)
+        if(this.getOrderString()==null)
         {
             /*trueOrder = new HashMap<Integer,Integer>();
 
@@ -391,7 +391,7 @@ public class RCV_Model extends Model {
         Hybrid_Model hybrid_model = (Hybrid_Model) this;
         ROM_Model rom_model = (ROM_Model) hybrid_model.tableModels.get(0).y;
 
-        /*int columnIndex = Integer.parseInt(indexString.split("_")[1])-1;
+        /*int columnIndex = Integer.parseInt(getOrderString().split("_")[1])-1;
         CellRegion tableRegion =  new CellRegion(1, columnIndex,//100000,20);
                 currentSheet.getEndRowIndex(),columnIndex);
 
@@ -399,7 +399,7 @@ public class RCV_Model extends Model {
 
         Collections.sort(result, Comparator.comparing(SCell::getStringValue));*/
 
-        int columnIndex = Integer.parseInt(indexString.split("_")[1])-1;
+        int columnIndex = Integer.parseInt(getOrderString().split("_")[1])-1;
 
         CellRegion tableRegion =  new CellRegion(1, columnIndex,//100000,20);
                 currentSheet.getEndRowIndex(),columnIndex);
@@ -420,7 +420,7 @@ public class RCV_Model extends Model {
             else
             {
                 CombinedStatistic startRow = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(tableRegion.getRow()-1));//-1 to acount for the header which is not inserted
-                rowIds = rom_model.rowOrderTable.get(hybrid_model.tableModels.get(0).y.indexString).getIDs(context, startRow, tableRegion.getLastRow() - tableRegion.getRow() + 1,AbstractStatistic.Type.COUNT);
+                rowIds = rom_model.rowOrderTable.get(hybrid_model.tableModels.get(0).y.getOrderString()).getIDs(context, startRow, tableRegion.getLastRow() - tableRegion.getRow() + 1,AbstractStatistic.Type.COUNT);
             }
 
             ArrayList<Integer> ids = new ArrayList<>();
@@ -442,17 +442,17 @@ public class RCV_Model extends Model {
             rom_model.rowCombinedTree = new CombinedBTree(context, tableName + "_row_com_idx");
             rom_model.rowCombinedTree.insertIDs(context,statistics,ids);*/
 
-            if(rom_model.rowOrderTable.containsKey(indexString))
-                rom_model.rowCombinedTree = rom_model.rowOrderTable.get(indexString);
+            if(rom_model.rowOrderTable.containsKey(getOrderString()))
+                rom_model.rowCombinedTree = rom_model.rowOrderTable.get(getOrderString());
             else{
-                CombinedBTree newOrder = new CombinedBTree(context, tableName + "_row_com_"+indexString+"_idx");
+                CombinedBTree newOrder = new CombinedBTree(context, tableName + "_row_com_"+getOrderString()+"_idx");
                 newOrder.insertIDs(context,statistics,ids);
 
-                rom_model.rowOrderTable.put(indexString,newOrder);
+                rom_model.rowOrderTable.put(getOrderString(),newOrder);
 
                 rom_model.rowCombinedTree = newOrder;
 
-                hybrid_model.tableModels.get(0).y.indexString = indexString;
+                hybrid_model.tableModels.get(0).y.setOrderString(getOrderString());
 
 
             }
@@ -510,12 +510,6 @@ public class RCV_Model extends Model {
         return headers;
 
     }
-
-    @Override
-    public void setIndexString(String str) {
-        this.indexString = str;
-    }
-
 
     @Override
     public void dropSchema(DBContext context) {

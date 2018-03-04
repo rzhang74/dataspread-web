@@ -43,7 +43,7 @@ public class NavigationTask extends Thread {
 
 
             //for new sheet with no navS
-            if(sheet.getDataModel().indexString==null)
+            if(sheet.getDataModel().getOrderString()==null)
             {
                 //Todo:write new list in a table
                 ArrayList<Bucket<String>> newList = sheet.getDataModel().navS.getUniformBuckets(0,sheet.getEndRowIndex());
@@ -51,7 +51,7 @@ public class NavigationTask extends Thread {
 
             ROM_Model rom_model = this.sheet.getDataModel().getROM_Model();
 
-            int columnIndex = Integer.parseInt(sheet.getDataModel().indexString.split("_")[1])-1;
+            int columnIndex = Integer.parseInt(sheet.getDataModel().getOrderString().split("_")[1])-1;
 
 
             //TODO: do we get cells from sheet or DB?
@@ -72,7 +72,7 @@ public class NavigationTask extends Thread {
                 else
                 {
                     CombinedStatistic startRow = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(tableRegion.getRow()-1));//-1 to acount for the header which is not inserted
-                    rowIds = rom_model.rowOrderTable.get(sheet.getDataModel().getROM_Model().indexString).getIDs(context, startRow, tableRegion.getLastRow() - tableRegion.getRow() + 1, AbstractStatistic.Type.COUNT);
+                    rowIds = rom_model.rowOrderTable.get(sheet.getDataModel().getROM_Model().getOrderString()).getIDs(context, startRow, tableRegion.getLastRow() - tableRegion.getRow() + 1, AbstractStatistic.Type.COUNT);
                 }
 
                 ArrayList<Integer> ids = new ArrayList<>();
@@ -85,17 +85,17 @@ public class NavigationTask extends Thread {
                 }
 
 
-                if(rom_model.rowOrderTable.containsKey(sheet.getDataModel().indexString))
-                    rom_model.rowCombinedTree = rom_model.rowOrderTable.get(sheet.getDataModel().indexString);
+                if(rom_model.rowOrderTable.containsKey(sheet.getDataModel().getOrderString()))
+                    rom_model.rowCombinedTree = rom_model.rowOrderTable.get(sheet.getDataModel().getOrderString());
                 else{
-                    CombinedBTree newOrder = new CombinedBTree(context, sheet.getDataModel().tableName + "_row_com_"+sheet.getDataModel().indexString+"_idx");
+                    CombinedBTree newOrder = new CombinedBTree(context, sheet.getDataModel().tableName + "_row_com_"+sheet.getDataModel().getOrderString()+"_idx");
                     newOrder.insertIDs(context,statistics,ids);
 
-                    rom_model.rowOrderTable.put(sheet.getDataModel().indexString,newOrder);
+                    rom_model.rowOrderTable.put(sheet.getDataModel().getOrderString(),newOrder);
 
                     rom_model.rowCombinedTree = newOrder;
 
-                    sheet.getDataModel().getROM_Model().indexString = sheet.getDataModel().indexString;
+                    sheet.getDataModel().getROM_Model().setOrderString(sheet.getDataModel().getOrderString());
 
 
                 }

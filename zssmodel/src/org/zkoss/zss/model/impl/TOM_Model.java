@@ -97,56 +97,6 @@ public class TOM_Model extends Model {
         //load sorted data from table
         ArrayList<String> recordList =  new ArrayList<String>();
 
-        AutoRollbackConnection connection = DBHandler.instance.getConnection();
-        DBContext context = new DBContext(connection);
-        StringBuffer select = null;
-        if(bucketName==null)
-        {
-            select = new StringBuffer("SELECT COUNT(*)");
-            select.append(" FROM ")
-                    .append(tableName+"_2")
-                    .append(" WHERE row !=1");
-            try (PreparedStatement stmt = connection.prepareStatement(select.toString())) {
-
-                ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    count = rs.getInt(1);
-                }
-                rs.close();
-                stmt.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        ArrayList<Integer> rowIds = rowMapping.getIDs(context,start,count);
-
-        select = null;
-        if(indexString.length()==0)
-            select = new StringBuffer("SELECT row, col_1");
-        else
-            select = new StringBuffer("SELECT row, "+indexString);
-
-        select.append(" FROM ")
-                .append(tableName+"_2")
-                .append(" WHERE row = ANY (?) AND row !=1");
-
-        try (PreparedStatement stmt = connection.prepareStatement(select.toString())) {
-            Array inArrayRow = context.getConnection().createArrayOf("integer", rowIds.toArray());
-            stmt.setArray(1, inArrayRow);
-
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                recordList.add(new String(rs.getBytes(2),"UTF-8"));
-            }
-            rs.close();
-            stmt.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        //create nav data structure
-        this.navS.setRecordList(recordList);
         ArrayList<Bucket<String>> newList = this.navS.getNonOverlappingBuckets(0,recordList.size()-1);//getBucketsNoOverlap(0,recordList.size()-1,true);
 
         if(bucketName==null)
@@ -196,10 +146,6 @@ public class TOM_Model extends Model {
 
     }
 
-    @Override
-    public void setIndexString(String str) {
-        this.indexString = str;
-    }
 
     @Override
     public void dropSchema(DBContext context) {

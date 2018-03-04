@@ -86,7 +86,7 @@ public class Hybrid_Model extends RCV_Model {
         return rom_model;
     }
 
-    /* For All the TOM models that display the range adjust the rnage */
+        /* For All the TOM models that display the range adjust the rnage */
     public void shrinkRange(String tableName) {
 
     }

@@ -40,6 +40,29 @@ public class CountedBTree implements PosMapping{
         return btree.getIDs(context, statistic, count, AbstractStatistic.Type.COUNT);
     }
 
+    public ArrayList getKeys(DBContext context, int start, int count) {
+
+        int jump = count/10;
+        ArrayList values=new ArrayList();
+
+        CountStatistic statistic = new CountStatistic(start);
+        if(jump == 0) {
+            values= btree.getIDs(context, statistic, count, AbstractStatistic.Type.COUNT);
+            return values;
+        }
+
+        ArrayList keys = new ArrayList();
+
+        for(int i=0;i<10;i++) {
+            start += jump*i;
+            statistic = new CountStatistic(start);
+            values = btree.getIDs(context, statistic, 1, AbstractStatistic.Type.COUNT);
+            keys.add(values.get(0));
+        }
+
+        return keys;
+    }
+
     @Override
     public ArrayList deleteIDs(DBContext context, int pos, int count) {
         if ((pos + count) > size(context))

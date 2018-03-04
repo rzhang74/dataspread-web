@@ -137,11 +137,6 @@ public class COM_Model extends Model {
         return null;
     }
 
-    @Override
-    public void setIndexString(String str) {
-        this.indexString = str;
-    }
-
 
     @Override
     public boolean deleteTableRows(DBContext context, CellRegion cellRegion) {

@@ -1,6 +1,8 @@
 package org.zkoss.zss.model.impl;
 
+import org.model.AutoRollbackConnection;
 import org.model.DBContext;
+import org.model.DBHandler;
 import org.zkoss.zss.model.CellRegion;
 import org.zkoss.zss.model.SSheet;
 import org.zkoss.zss.model.impl.sys.navigation.Bucket;
@@ -8,6 +10,10 @@ import org.zkoss.zss.model.impl.sys.navigation.NavigationStructure;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -17,7 +23,7 @@ public abstract class Model {
     protected SSheet sheet;
     public ArrayList<Bucket<String>> navSbuckets;
     public NavigationStructure navS;
-    public String indexString;
+    private String orderString;
     public HashMap<Integer,Integer> trueOrder;
 
     public static Model CreateModel(DBContext context, SSheet sheet, ModelType modelType, String tableName) {
@@ -42,6 +48,7 @@ public abstract class Model {
                 break;
         }
         model.sheet = sheet;
+        model.orderString = null;
         return model;
     }
 
@@ -108,9 +115,57 @@ public abstract class Model {
     public abstract ArrayList<Bucket<String>> createNavS(SSheet currentsheet, int start, int count);
 
     public abstract ArrayList<String> getHeaders();
-    public abstract void setIndexString(String str);
+    public void setOrderString(String str) {
+        this.orderString = str;
+    }
+    public String getOrderString(){return  this.orderString;};
+    public boolean isPersistedOrder() {
+        if(getOrder()!=null)
+            return true;
 
-    //
+        return false;
+    }
+
+    public String getOrder() {
+        String readTable = (new StringBuffer())
+                .append("SELECT treeTable FROM orderTable WHERE sheetTable=")// orderTable(sheetTable,order,treeTable)
+                .append(tableName)
+                .append(" AND order=")
+                .append(this.orderString)
+                .toString();
+
+        String bTreeName=null;
+
+        try (AutoRollbackConnection connection = DBHandler.instance.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(readTable)) {
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                java.sql.Blob blob= rs.getBlob(1);
+                bTreeName = new String(blob.getBytes(1L, (int) blob.length()));
+            }
+            rs.close();
+            stmt.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return bTreeName;
+    }
+
+    public void mapOrderToBTree(DBContext context,String tableName, String order, String bTreeName) {
+        String insertTable = (new StringBuffer())
+                .append("INSERT INTO orderTable(sheetTable,order,treeTable) ")// orderTable(sheetTable,order,treeTable)
+                .append("values ("+tableName+","+order+","+bTreeName+")")
+                .toString();
+
+        AutoRollbackConnection connection = context.getConnection();
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute(insertTable);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }//
     public enum ModelType {
         ROM_Model, COM_Model, RCV_Model, HYBRID_Model, TOM_Model
     }
