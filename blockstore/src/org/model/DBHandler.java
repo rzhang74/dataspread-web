@@ -70,6 +70,7 @@ public class DBHandler {
             createUserTable(dbContext);
             createTableOrders(dbContext);
             createDependencyTable(dbContext);
+            createOrdersTable(dbContext);
             connection.commit();
             //dbListener = new DBListener();
             //dbListener.start();
@@ -114,6 +115,23 @@ public class DBHandler {
             e.printStackTrace();
         }
     }
+
+    private void createOrdersTable(DBContext dbContext)
+    {
+        AutoRollbackConnection connection = dbContext.getConnection();
+        try (Statement stmt = connection.createStatement())
+        {
+            String createOrdersTable = "CREATE TABLE  IF NOT  EXISTS  NavigationOrders (" +
+                    "dataTable   TEXT NOT NULL," +
+                    "orderName  TEXT  NOT NULL," +
+                    "orderTable TEXT  NOT NULL," +
+                    "PRIMARY KEY (bookname, sheetname, order))";
+            stmt.execute(createOrdersTable);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private void createUserTable(DBContext dbContext) {
         AutoRollbackConnection connection = dbContext.getConnection();

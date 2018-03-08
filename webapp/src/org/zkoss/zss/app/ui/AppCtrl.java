@@ -47,6 +47,7 @@ import org.zkoss.zss.app.repository.impl.BookUtil;
 import org.zkoss.zss.app.repository.impl.SimpleBookInfo;
 import org.zkoss.zss.app.ui.dlg.*;
 import org.zkoss.zss.model.*;
+import org.zkoss.zss.model.impl.CombinedBTree;
 import org.zkoss.zss.model.impl.sys.navigation.Bucket;
 import org.zkoss.zss.model.impl.SheetImpl;
 import org.zkoss.zss.model.sys.navigation.NavigationTaskManager;
@@ -59,6 +60,7 @@ import org.zkoss.zss.ui.impl.DefaultUserActionManagerCtrl;
 import org.zkoss.zss.ui.impl.Focus;
 import org.zkoss.zss.ui.sys.UndoableActionManager;
 import org.zkoss.zul.*;
+import org.zkoss.zul.ext.TreeSelectableModel;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -311,13 +313,38 @@ public class AppCtrl extends CtrlBase<Component> {
         initBook();
     }
 
+
+    private class NavigationTreeModel<T> extends  AbstractTreeModel<T> implements TreeSelectableModel {
+        CombinedBTree combinedBTree;
+
+        public NavigationTreeModel(T root, CombinedBTree combinedBTree) {
+            super(root);
+            this.combinedBTree = combinedBTree;
+        }
+
+        @Override
+        public boolean isLeaf(T node) {
+            return false;
+        }
+
+        @Override
+        public T getChild(T parent, int index) {
+            return null;
+        }
+
+        @Override
+        public int getChildCount(T parent) {
+            return 0;
+        }
+    }
+
     private void createNavS(SheetImpl currentSheet, int index) {
         if(currentSheet.getEndRowIndex() > 1000000)
             return;
 
         try {
             if(currentSheet.getEndRowIndex()<1) {
-                treeBucket.setModel(new DefaultTreeModel<Bucket<String>>(new BucketTreeNode<Bucket<String>>(null,new BucketTreeNodeCollection<Bucket<String>>())));
+               // treeBucket.setModel(new NavigationTreeModel<Bucket<String>>(  ));
                 return;
             }
 
@@ -329,26 +356,10 @@ public class AppCtrl extends CtrlBase<Component> {
                 currentSheet.clearCache();
             }
 
-            /*if(currentSheet.getDataModel().getOrder()!=null)
-            {
-                //Todo: launch Navigation task manager here
-                //create nav structure from BTree
-            }
-            else
-            {
-                //Todo: launch Navigation task manager here
-                //NavigationTaskManager.getInstance().startNavigationBuilderTask(currentSheet);
-
-            }*/
-
-            ss.setNavSBuckets(currentSheet.getDataModel().createNavS(currentSheet, 0, 0));
-
-            //Todo: call createNavS tree when user selects the navigation panel
-            createNavSTree();
-
+            CombinedBTree combinedBTree = currentSheet.getDataModel().getOrder();
+            Bucket<String> root = new Bucket<>(combinedBTree);
+            treeBucket.setModel(new NavigationTreeModel<>(root, combinedBTree));
             currentSheet.fullRefresh();
-
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1372,6 +1383,7 @@ public class AppCtrl extends CtrlBase<Component> {
         return sdf.parse(date).getTime();
 
     }
+
 
     @Listen("onSelect = #treeBucket")
     public void nodeSelected() {

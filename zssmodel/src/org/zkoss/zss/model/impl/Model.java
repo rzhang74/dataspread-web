@@ -17,6 +17,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.concurrent.CompletableFuture;
 
 public abstract class Model {
     public String tableName;
@@ -119,53 +120,72 @@ public abstract class Model {
         this.orderString = str;
     }
     public String getOrderString(){return  this.orderString;};
-    public boolean isPersistedOrder() {
-        if(getOrder()!=null)
-            return true;
 
-        return false;
-    }
-
-    public String getOrder() {
-        String readTable = (new StringBuffer())
-                .append("SELECT treeTable FROM orderTable WHERE sheetTable=")// orderTable(sheetTable,order,treeTable)
-                .append(tableName)
-                .append(" AND order=")
-                .append(this.orderString)
-                .toString();
-
+    // If the order does not exist create a new order.
+    public CombinedBTree getOrder(DBContext dbContext) {
+        String readTable ="SELECT orderTable FROM NavigationOrders WHERE dataTable=? AND orderName=?";
         String bTreeName=null;
 
         try (AutoRollbackConnection connection = DBHandler.instance.getConnection();
              PreparedStatement stmt = connection.prepareStatement(readTable)) {
-
+            stmt.setString(1, tableName);
+            stmt.setString(2, orderString);
             ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                java.sql.Blob blob= rs.getBlob(1);
-                bTreeName = new String(blob.getBytes(1L, (int) blob.length()));
-            }
+            if (rs.next())
+                bTreeName = rs.getString(1);
             rs.close();
-            stmt.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return bTreeName;
+
+        if (bTreeName==null)
+        {
+            bTreeName = tableName + "_nav_" + orderString;
+            insertNewOrder(tableName, orderString, bTreeName);
+            CombinedBTree combinedBTree = new CombinedBTree(dbContext, bTreeName);
+            // Start Thread.
+            CompletableFuture.runAsync(() -> populateOrder(tableName, orderString, combinedBTree));
+            return combinedBTree;
+        }
+        else {
+            return  new CombinedBTree(dbContext, bTreeName);
+        }
     }
 
-    public void mapOrderToBTree(DBContext context,String tableName, String order, String bTreeName) {
-        String insertTable = (new StringBuffer())
-                .append("INSERT INTO orderTable(sheetTable,order,treeTable) ")// orderTable(sheetTable,order,treeTable)
-                .append("values ("+tableName+","+order+","+bTreeName+")")
-                .toString();
 
-        AutoRollbackConnection connection = context.getConnection();
-        try (Statement stmt = connection.createStatement()) {
-            stmt.execute(insertTable);
+    private void populateOrder(String tableName, String orderString, CombinedBTree combinedBTree)
+    {
+        String readTable ="SELECT " + orderString + " FROM " + tableName;
+        try (AutoRollbackConnection connection = DBHandler.instance.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(readTable)) {
+            ResultSet rs = stmt.executeQuery();
+            // TODO: Insert records here.
+            while (rs.next())
+                combinedBTree.insertIDs();
 
+            rs.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+
+    private void insertNewOrder(String dataTable, String orderName, String orderTable) {
+        String insertTable = "INSERT INTO NavigationOrders(dataTable, orderName, orderTable) VALUES (?, ?, ?)";
+        try (AutoRollbackConnection connection = DBHandler.instance.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(insertTable)) {
+            stmt.setString(1, dataTable);
+            stmt.setString(2, orderName);
+            stmt.setString(3, orderTable);
+            stmt.execute();
+            connection.commit();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }//
+    }
+
     public enum ModelType {
         ROM_Model, COM_Model, RCV_Model, HYBRID_Model, TOM_Model
     }
