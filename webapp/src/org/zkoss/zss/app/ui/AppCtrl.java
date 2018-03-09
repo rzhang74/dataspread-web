@@ -11,7 +11,6 @@ Copyright (C) 2013 Potix Corporation. All Rights Reserved.
 */
 package org.zkoss.zss.app.ui;
 
-import com.sun.org.apache.xpath.internal.operations.String;
 import org.ngi.zhighcharts.SimpleExtXYModel;
 import org.ngi.zhighcharts.ZHighCharts;
 import org.zkoss.image.AImage;
@@ -60,7 +59,6 @@ import org.zkoss.zss.ui.impl.DefaultUserActionManagerCtrl;
 import org.zkoss.zss.ui.impl.Focus;
 import org.zkoss.zss.ui.sys.UndoableActionManager;
 import org.zkoss.zul.*;
-import org.zkoss.zul.ext.TreeSelectableModel;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -143,6 +141,9 @@ public class AppCtrl extends CtrlBase<Component> {
     // Stacked and grouped column
 
     private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+
+    RODTreeModel<SpreadsheetBean<String>> sheetTreeModel;
+    SpreadsheetBean<String> selectedNode;
 
     @Wire
     private Tree treeBucket;
@@ -314,35 +315,6 @@ public class AppCtrl extends CtrlBase<Component> {
     }
 
 
-    private class NavigationTreeModel<T> extends  AbstractTrseeModel<T> implements TreeSelectableModel {
-        CombinedBTree combinedBTree;
-
-        public NavigationTreeModel(T root, CombinedBTree combinedBTree) {
-            super(root);
-            this.combinedBTree = combinedBTree;
-        }
-
-        @Override
-        public boolean isLeaf(T node) {
-            return (getChildCount(node) == 0);
-        }
-
-        @Override
-        public T getChild(T parent, int index) {
-            Bucket<String> pNode = (Bucket<String>) parent;
-            int i = _tree.indexOf(parent) * 2 + 1 + index;
-            if (i >= _tree.size())
-                return null;
-            else
-                return _tree.get(i);
-        }
-
-        @Override
-        public int getChildCount(T parent) {
-            Bucket<String> pNode = (Bucket<String>) parent;
-            return pNode.getChildrenCount();
-        }
-    }
 
     private void createNavS(SheetImpl currentSheet, int index) {
         if(currentSheet.getEndRowIndex() > 1000000)
@@ -363,8 +335,11 @@ public class AppCtrl extends CtrlBase<Component> {
             }
 
             CombinedBTree combinedBTree = currentSheet.getDataModel().getOrder();
-            Bucket<String> root = currentSheet.getDataModel().getNavTreeNode(combinedBTree);
-            treeBucket.setModel(new NavigationTreeModel<>(root, combinedBTree));
+            int startPos = 2;//discard header
+            int endPos = currentSheet.getDataModel().getSheetTableSize();
+            String startVal = currentSheet.getDataModel().getValue(startPos);
+            String endVal = currentSheet.getDataModel().getValue(endPos);
+            treeBucket.setModel(getSpreadsheetTreeModel(startVal,endVal,startPos,endPos));
             currentSheet.fullRefresh();
         } catch (Exception e) {
             e.printStackTrace();
@@ -1390,9 +1365,28 @@ public class AppCtrl extends CtrlBase<Component> {
 
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public TreeModel<RODTreeNode<SpreadsheetBean<String>>> getSpreadsheetTreeModel (String startVal, String endVal, int startPos, int endPos) {
+        RODTreeNode root = new RODTreeNode(null,
+                new RODTreeNode[] {new RODTreeNode(new SpreadsheetBean<String>(startVal,endVal,startPos,endPos), (List)null)
+                });
+        if (sheetTreeModel == null) {
+            sheetTreeModel = new RODTreeModel<SpreadsheetBean<String>>(root);
+        }
+        return sheetTreeModel;
+    }
+
+
 
     @Listen("onSelect = #treeBucket")
-    public void nodeSelected() {
+    public void updateSelectedDirectory (SelectEvent event) {
+        Set s = event.getSelectedObjects();
+        if (s != null && s.size() > 0) {
+            selectedNode = ((RODTreeNode<SpreadsheetBean<String>>)s.iterator().next()).getData();
+            System.out.println("selected: " + selectedNode.getName() + ", path = " + selectedNode.getSummary());
+        }
+    }
+    /*public void nodeSelected() {
         DefaultTreeNode<Bucket<String>> selectedNode = treeBucket.getSelectedItem().getValue();
 
         System.out.println("Name: "+selectedNode.getData().getName());
@@ -1401,7 +1395,7 @@ public class AppCtrl extends CtrlBase<Component> {
         int end = selectedNode.getData().getEndPos();
         String bucketName = selectedNode.getData().getName();
         ss.focusTo(start+1,0);
-    }
+    }*/
 
     @Listen("onFocusByChartColumn = #mainWin")
     public void onFocusByChartColumn(Event evt)

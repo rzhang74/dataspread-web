@@ -119,7 +119,7 @@ public class NavigationStructure{
             int startIndex=startPos;
             for (int i = 0; i < kHisto && startIndex < endPos+1; i++) {
                 //System.out.println("---------------BUCKET NO: "+i);
-                Bucket bucket = new Bucket(combinedBTree, startVal, endVal, 2, count);
+                Bucket bucket = new Bucket();
                 bucket.minValue = recordList.get(startIndex);
                 bucket.startPos = startIndex;
                 if(startIndex+bucketSize-1 < endPos+1) {
@@ -176,7 +176,7 @@ public class NavigationStructure{
 
             if(startIndex<endPos+1)
             {
-                Bucket bucket = new Bucket(combinedBTree, startVal, endVal, 2, count);
+                Bucket bucket = new Bucket();
                 bucket.minValue = recordList.get(startIndex);
                 bucket.maxValue = recordList.get(endPos);
                 bucket.startPos = startIndex;
@@ -207,7 +207,7 @@ public class NavigationStructure{
             int startIndex=startPos;
             for (int i = 0; i < kHisto && startIndex < endPos+1; i++) {
                 //System.out.println("---------------BUCKET NO: " + i);
-                Bucket bucket = new Bucket(combinedBTree, startVal, endVal, 2, count);
+                Bucket bucket = new Bucket();
                 //bucket.minValue = recordList.get(startIndex);
                 bucket.startPos = startIndex;
                 if (startIndex + bucketSize - 1 < endPos + 1) {
@@ -229,7 +229,7 @@ public class NavigationStructure{
 
             if(startIndex<endPos+1)
             {
-                Bucket bucket = new Bucket(combinedBTree, startVal, endVal, 2, count);
+                Bucket bucket = new Bucket();
                 //bucket.minValue = recordList.get(startIndex);
                 //bucket.maxValue = recordList.get(endPos);
                 bucket.startPos = startIndex;
@@ -261,7 +261,7 @@ public class NavigationStructure{
             int startIndex=startPos;
             for (int i = 0; i < kHisto && startIndex < endPos+1; i++) {
                 //System.out.println("---------------BUCKET NO: "+i);
-                Bucket bucket = new Bucket(combinedBTree, startVal, endVal, 2, count);
+                Bucket bucket = new Bucket();
                 bucket.minValue = recordList.get(startIndex);
                 bucket.startPos = startIndex;
                 if(startIndex+bucketSize-1 < endPos+1) {
@@ -318,7 +318,7 @@ public class NavigationStructure{
 
             if(startIndex<endPos+1)
             {
-                Bucket bucket = new Bucket(combinedBTree, startVal, endVal, 2, count);
+                Bucket bucket = new Bucket();
                 bucket.minValue = recordList.get(startIndex);
                 bucket.maxValue = recordList.get(endPos);
                 bucket.startPos = startIndex;
@@ -349,7 +349,7 @@ public class NavigationStructure{
             int startIndex=startPos;
             for (int i = 0; i < kHisto && startIndex < endPos+1; i++) {
                 //System.out.println("---------------BUCKET NO: " + i);
-                Bucket bucket = new Bucket(combinedBTree, startVal, endVal, 2, count);
+                Bucket bucket = new Bucket();
                 bucket.minValue = recordList.get(startIndex);
                 bucket.startPos = startIndex;
                 if (startIndex + bucketSize - 1 < endPos + 1) {
@@ -371,7 +371,7 @@ public class NavigationStructure{
 
             if(startIndex<endPos+1)
             {
-                Bucket bucket = new Bucket(combinedBTree, startVal, endVal, 2, count);
+                Bucket bucket = new Bucket();
                 bucket.minValue = recordList.get(startIndex);
                 bucket.maxValue = recordList.get(endPos);
                 bucket.startPos = startIndex;
@@ -513,13 +513,13 @@ public class NavigationStructure{
                 while(rs.next()) {
                     if (useKryo) {
                         Input in = new Input(rs.getBytes(1));
-                        Bucket<String> object = new Bucket<String>(combinedBTree, startVal, endVal, 2, count);
+                        Bucket<String> object = new Bucket<String>();
                         object = kryo.readObject(in, object.getClass());
                         in.close();
                         bucketList.add(object);
                     } else {
                         ObjectMapper mapper = new ObjectMapper();
-                        Bucket<String> object = new Bucket<String>(combinedBTree, startVal, endVal, 2, count);
+                        Bucket<String> object = new Bucket<String>();
                         String value = new String(rs.getBytes(1));
                         mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
                         object = mapper.readValue(value,Bucket.class);

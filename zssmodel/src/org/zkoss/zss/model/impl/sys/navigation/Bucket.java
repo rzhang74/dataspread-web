@@ -30,24 +30,6 @@ public class Bucket<T> implements Serializable{
 
     }
 
-    public Bucket(CombinedBTree combinedBTree, String startVal, String endVal, int starPos, int endPos)
-    {
-
-        AutoRollbackConnection connection = DBHandler.instance.getConnection();
-        DBContext dbContext = new DBContext(connection);
-
-        minValue = (T) startVal;
-
-        maxValue = (T) endVal;
-        childrenCount = 10;
-        size = 10;
-        this.startPos = starPos;
-        this.endPos = endPos;
-        this.name = this.toString();
-        this.setId();
-
-    }
-
     @Override
     public String toString() {
         if (minValue==null || maxValue==null)
@@ -93,7 +75,7 @@ public class Bucket<T> implements Serializable{
     public String getSummary(){
         summary = this.getName()+"\n";
         summary += "Sub-categories: " + this.childrenCount+"\n";
-        summary += "[Start,End]: ["+(this.startPos)+","+(this.endPos)+"]\n";
+        summary += "[Start,End]: ["+(this.startPos+2)+","+(this.endPos+2)+"]\n";
         summary += "Rows: "+this.size;
         return summary;
     }

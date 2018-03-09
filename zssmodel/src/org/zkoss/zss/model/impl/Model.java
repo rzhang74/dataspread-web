@@ -204,8 +204,9 @@ public abstract class Model {
         }
     }
 
-    public Bucket<String> getNavTreeNode(CombinedBTree combinedBTree) {
 
+    public int getSheetTableSize()
+    {
         String readTable ="SELECT count(*) FROM " + tableName+ " WHERE row!=1"; //ignore header row
 
         int count = 0;
@@ -224,23 +225,10 @@ public abstract class Model {
             e.printStackTrace();
         }
 
-        String startVal = getValue(2);
-
-        String endVal = getValue(count);
-
-        return new Bucket<String>(combinedBTree,startVal,endVal,2,count);//skip header row
+        return count;
     }
 
-    public Bucket<String> getNavTreeNode(CombinedBTree combinedBTree,int startPos,int endPos) {
-
-        String startVal = getValue(startPos);
-
-        String endVal = getValue(endPos);
-
-        return new Bucket<String>(combinedBTree,startVal,endVal,startPos,endPos);//skip header row
-    }
-
-    protected String getValue(int count)
+    public String getValue(int count)
     {
         String readTable ="SELECT "+orderString+" FROM " + tableName+ " WHERE row="+count; //ignore header row
         String value=null;
