@@ -239,7 +239,7 @@ public abstract class Model {
 
             if (rs.next()) {
 
-                 value= rs.getString(1);
+                 value= new String(rs.getBytes(1),"UTF-8");
 
             }
             rs.close();
