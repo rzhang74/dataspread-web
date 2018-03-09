@@ -5,15 +5,14 @@ import org.model.DBContext;
 import org.model.DBHandler;
 import org.zkoss.zss.model.CellRegion;
 import org.zkoss.zss.model.SSheet;
+import org.zkoss.zss.model.impl.statistic.CombinedStatistic;
+import org.zkoss.zss.model.impl.statistic.KeyStatistic;
 import org.zkoss.zss.model.impl.sys.navigation.Bucket;
 import org.zkoss.zss.model.impl.sys.navigation.NavigationStructure;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -122,7 +121,7 @@ public abstract class Model {
     public String getOrderString(){return  this.orderString;};
 
     // If the order does not exist create a new order.
-    public CombinedBTree getOrder(DBContext dbContext) {
+    public CombinedBTree getOrder() {
         String readTable ="SELECT orderTable FROM NavigationOrders WHERE dataTable=? AND orderName=?";
         String bTreeName=null;
 
@@ -140,29 +139,48 @@ public abstract class Model {
 
         if (bTreeName==null)
         {
+            AutoRollbackConnection connection = DBHandler.instance.getConnection();
+            DBContext dbContext = new DBContext(connection);
             bTreeName = tableName + "_nav_" + orderString;
             insertNewOrder(tableName, orderString, bTreeName);
             CombinedBTree combinedBTree = new CombinedBTree(dbContext, bTreeName);
             // Start Thread.
-            CompletableFuture.runAsync(() -> populateOrder(tableName, orderString, combinedBTree));
+            CompletableFuture.runAsync(() -> populateOrder(dbContext,tableName, orderString, combinedBTree));
             return combinedBTree;
         }
         else {
+            AutoRollbackConnection connection = DBHandler.instance.getConnection();
+            DBContext dbContext = new DBContext(connection);
             return  new CombinedBTree(dbContext, bTreeName);
         }
     }
 
 
-    private void populateOrder(String tableName, String orderString, CombinedBTree combinedBTree)
+    private void populateOrder(DBContext context,String tableName, String orderString, CombinedBTree combinedBTree)
     {
-        String readTable ="SELECT " + orderString + " FROM " + tableName;
+        String readTable ="SELECT row," + orderString + " FROM " + tableName+ " WHERE row!=1"; //ignore header row
         try (AutoRollbackConnection connection = DBHandler.instance.getConnection();
              PreparedStatement stmt = connection.prepareStatement(readTable)) {
             ResultSet rs = stmt.executeQuery();
+            int batchSize = 1000;// insert every 1k elements in BTree
             // TODO: Insert records here.
-            while (rs.next())
-                combinedBTree.insertIDs();
+            ArrayList<Integer> ids = new ArrayList<>();
+            ArrayList<CombinedStatistic> statistics = new ArrayList<>();
 
+            int count = 0;
+            int row = 0; //row number of record
+            while (rs.next()) {
+
+                count++;
+
+                row = rs.getInt(1);
+                ids.add(row);
+                statistics.add(new CombinedStatistic(new KeyStatistic(new String(rs.getBytes(2),"UTF-8"))));
+
+                if(count%batchSize==0) {
+                    combinedBTree.insertIDs(context,statistics,ids);
+                }
+            }
             rs.close();
         } catch (Exception e) {
             e.printStackTrace();

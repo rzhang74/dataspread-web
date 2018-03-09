@@ -624,7 +624,7 @@ public class AppCtrl extends CtrlBase<Component> {
 
                         newSheet.getDataModel().importSheet(
                                 m.isBinary() ? new BufferedReader(new InputStreamReader(m.getStreamData())) :
-                                        m.getReaderData(), delimiter, (((SheetImpl) newSheet).getEndRowIndex() > 100000));
+                                        m.getReaderData(), delimiter, false);//(((SheetImpl) newSheet).getEndRowIndex() > 100000));
 
                         /*ss.setNavSBuckets(newSheet.getDataModel().navSbuckets);
                         createNavSTree(newSheet.getDataModel().navSbuckets);

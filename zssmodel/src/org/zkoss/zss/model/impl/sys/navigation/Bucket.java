@@ -19,7 +19,7 @@ public class Bucket<T> implements Serializable{
     String name;
     String id;
     String summary;
-    //ArrayList<Bucket<T>> children;
+    ArrayList<Bucket<T>> children;
 
 
     Bucket()
@@ -29,6 +29,8 @@ public class Bucket<T> implements Serializable{
 
     public Bucket(CombinedBTree combinedBTree)
     {
+
+        //TODO:Traverse tree and get max and min value
         minValue = (T) "1";
         maxValue = (T) "10";
         childrenCount = 10;
@@ -64,12 +66,12 @@ public class Bucket<T> implements Serializable{
     public String getId(){
         return this.id;
     }
-//    public ArrayList<Bucket<T>> getChildren(){return children;}
-//    public void setChildren(ArrayList<Bucket<T>> children){
-//        this.children=children;
-//        this.childrenCount = children.size();
-//        this.size = this.endPos-this.startPos+1;
-//    }
+    public ArrayList<Bucket<T>> getChildren(){return children;}
+    public void setChildren(ArrayList<Bucket<T>> children){
+        this.children=children;
+        this.childrenCount = children.size();
+        this.size = this.endPos-this.startPos+1;
+    }
 
     public void setId() {
 
