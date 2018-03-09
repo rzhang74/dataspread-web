@@ -125,7 +125,7 @@ public class DBHandler {
                     "dataTable   TEXT NOT NULL," +
                     "orderName  TEXT  NOT NULL," +
                     "orderTable TEXT  NOT NULL," +
-                    "PRIMARY KEY (bookname, sheetname, order))";
+                    "PRIMARY KEY (dataTable, orderName, orderTable))";
             stmt.execute(createOrdersTable);
         } catch (SQLException e) {
             e.printStackTrace();

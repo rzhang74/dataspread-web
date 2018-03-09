@@ -1,5 +1,8 @@
 package org.zkoss.zss.model.impl.sys.navigation;
 
+import org.model.AutoRollbackConnection;
+import org.model.DBContext;
+import org.model.DBHandler;
 import org.zkoss.zss.model.impl.CombinedBTree;
 
 import java.io.Serializable;
@@ -27,15 +30,23 @@ public class Bucket<T> implements Serializable{
 
     }
 
-    public Bucket(CombinedBTree combinedBTree)
+    public Bucket(CombinedBTree combinedBTree, String startVal, String endVal, int starPos, int endPos)
     {
 
-        //TODO:Traverse tree and get max and min value
-        minValue = (T) "1";
-        maxValue = (T) "10";
-        childrenCount = 10;
-    }
+        AutoRollbackConnection connection = DBHandler.instance.getConnection();
+        DBContext dbContext = new DBContext(connection);
 
+        minValue = (T) startVal;
+
+        maxValue = (T) endVal;
+        childrenCount = 10;
+        size = 10;
+        this.startPos = starPos;
+        this.endPos = endPos;
+        this.name = this.toString();
+        this.setId();
+
+    }
 
     @Override
     public String toString() {
@@ -82,7 +93,7 @@ public class Bucket<T> implements Serializable{
     public String getSummary(){
         summary = this.getName()+"\n";
         summary += "Sub-categories: " + this.childrenCount+"\n";
-        summary += "[Start,End]: ["+(this.startPos+2)+","+(this.endPos+2)+"]\n";
+        summary += "[Start,End]: ["+(this.startPos)+","+(this.endPos)+"]\n";
         summary += "Rows: "+this.size;
         return summary;
     }

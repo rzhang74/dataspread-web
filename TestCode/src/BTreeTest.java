@@ -23,12 +23,12 @@ import java.util.Random;
 public class BTreeTest {
 
     public static void main(String[] args) {
-       // deepTest();
+        deepTest();
 
         //generateDist(1000000);
        // reBalancingVConstructionTest();
 
-        fillFactorTests();
+        //fillFactorTests();
     }
 
     private static void fillFactorTests() {
@@ -1755,7 +1755,7 @@ public class BTreeTest {
 
 
         //load data in to an array list and get unique values
-        ArrayList<Integer> ids = new ArrayList<>();
+        /*ArrayList<Integer> ids = new ArrayList<>();
         ArrayList<CombinedStatistic> statistics = new ArrayList<>();
         try {
             BufferedReader br = new BufferedReader(new FileReader("uniform_1m.csv"));
@@ -1796,11 +1796,11 @@ public class BTreeTest {
 
             testTree.getIDs(context, start, 1, AbstractStatistic.Type.COUNT);
 
-        }
+        }*/
 
-        /*CombinedBTree testTree = new CombinedBTree(context, tableName, false);
+        CombinedBTree testTree = new CombinedBTree(context, tableName, false);
         testTree.setBlockSize(5);
-        int [] num = {30, 50, 10, 10, 50, 80, 100};
+        int [] num = {30, 50, 10, 20, 60, 80, 100};
         ArrayList<Integer> ids = new ArrayList<>();
         ArrayList<CombinedStatistic> statistics = new ArrayList<>();
         for(int i = 0; i < num.length; i++) {
@@ -1808,9 +1808,9 @@ public class BTreeTest {
             statistics.add(new CombinedStatistic(new KeyStatistic(num[i])));
         }
         testTree.insertIDs(context, statistics, ids);
-        CombinedStatistic start = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(5));
+        CombinedStatistic start = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(0));
         ArrayList<Integer> results = testTree.getIDs(context, start, 1, AbstractStatistic.Type.COUNT);
-        System.out.println(results);*/
+        System.out.println(results);
     }
     public static void CombinedNodeSplit(DBContext context){
         String tableName = "CombinedNodeSplit";

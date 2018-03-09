@@ -11,6 +11,7 @@ Copyright (C) 2013 Potix Corporation. All Rights Reserved.
 */
 package org.zkoss.zss.app.ui;
 
+import com.sun.org.apache.xpath.internal.operations.String;
 import org.ngi.zhighcharts.SimpleExtXYModel;
 import org.ngi.zhighcharts.ZHighCharts;
 import org.zkoss.image.AImage;
@@ -50,7 +51,6 @@ import org.zkoss.zss.model.*;
 import org.zkoss.zss.model.impl.CombinedBTree;
 import org.zkoss.zss.model.impl.sys.navigation.Bucket;
 import org.zkoss.zss.model.impl.SheetImpl;
-import org.zkoss.zss.model.sys.navigation.NavigationTaskManager;
 import org.zkoss.zss.ui.*;
 import org.zkoss.zss.ui.Version;
 import org.zkoss.zss.ui.event.Events;
@@ -314,7 +314,7 @@ public class AppCtrl extends CtrlBase<Component> {
     }
 
 
-    private class NavigationTreeModel<T> extends  AbstractTreeModel<T> implements TreeSelectableModel {
+    private class NavigationTreeModel<T> extends  AbstractTrseeModel<T> implements TreeSelectableModel {
         CombinedBTree combinedBTree;
 
         public NavigationTreeModel(T root, CombinedBTree combinedBTree) {
@@ -324,17 +324,23 @@ public class AppCtrl extends CtrlBase<Component> {
 
         @Override
         public boolean isLeaf(T node) {
-            return false;
+            return (getChildCount(node) == 0);
         }
 
         @Override
         public T getChild(T parent, int index) {
-            return null;
+            Bucket<String> pNode = (Bucket<String>) parent;
+            int i = _tree.indexOf(parent) * 2 + 1 + index;
+            if (i >= _tree.size())
+                return null;
+            else
+                return _tree.get(i);
         }
 
         @Override
         public int getChildCount(T parent) {
-            return 0;
+            Bucket<String> pNode = (Bucket<String>) parent;
+            return pNode.getChildrenCount();
         }
     }
 
@@ -357,7 +363,7 @@ public class AppCtrl extends CtrlBase<Component> {
             }
 
             CombinedBTree combinedBTree = currentSheet.getDataModel().getOrder();
-            Bucket<String> root = new Bucket<>(combinedBTree);
+            Bucket<String> root = currentSheet.getDataModel().getNavTreeNode(combinedBTree);
             treeBucket.setModel(new NavigationTreeModel<>(root, combinedBTree));
             currentSheet.fullRefresh();
         } catch (Exception e) {

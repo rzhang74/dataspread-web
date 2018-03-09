@@ -204,6 +204,65 @@ public abstract class Model {
         }
     }
 
+    public Bucket<String> getNavTreeNode(CombinedBTree combinedBTree) {
+
+        String readTable ="SELECT count(*) FROM " + tableName+ " WHERE row!=1"; //ignore header row
+
+        int count = 0;
+        try (AutoRollbackConnection connection = DBHandler.instance.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(readTable)) {
+            ResultSet rs = stmt.executeQuery();
+
+
+            if (rs.next()) {
+
+                count = rs.getInt(1);
+
+            }
+            rs.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        String startVal = getValue(2);
+
+        String endVal = getValue(count);
+
+        return new Bucket<String>(combinedBTree,startVal,endVal,2,count);//skip header row
+    }
+
+    public Bucket<String> getNavTreeNode(CombinedBTree combinedBTree,int startPos,int endPos) {
+
+        String startVal = getValue(startPos);
+
+        String endVal = getValue(endPos);
+
+        return new Bucket<String>(combinedBTree,startVal,endVal,startPos,endPos);//skip header row
+    }
+
+    protected String getValue(int count)
+    {
+        String readTable ="SELECT "+orderString+" FROM " + tableName+ " WHERE row="+count; //ignore header row
+        String value=null;
+        try (AutoRollbackConnection connection = DBHandler.instance.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(readTable)) {
+            ResultSet rs = stmt.executeQuery();
+
+
+            if (rs.next()) {
+
+                 value= rs.getString(1);
+
+            }
+            rs.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return value;
+
+    }
+
     public enum ModelType {
         ROM_Model, COM_Model, RCV_Model, HYBRID_Model, TOM_Model
     }
