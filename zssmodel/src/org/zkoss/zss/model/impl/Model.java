@@ -127,7 +127,7 @@ public abstract class Model {
 
         try (AutoRollbackConnection connection = DBHandler.instance.getConnection();
              PreparedStatement stmt = connection.prepareStatement(readTable)) {
-            stmt.setString(1, tableName);
+            stmt.setString(1, this.getROM_Model().tableName);
             stmt.setString(2, orderString);
             ResultSet rs = stmt.executeQuery();
             if (rs.next())
@@ -141,11 +141,11 @@ public abstract class Model {
         {
             AutoRollbackConnection connection = DBHandler.instance.getConnection();
             DBContext dbContext = new DBContext(connection);
-            bTreeName = tableName + "_nav_" + orderString;
-            insertNewOrder(tableName, orderString, bTreeName);
+            bTreeName = this.getROM_Model().tableName + "_nav_" + orderString;
+            insertNewOrder(this.getROM_Model().tableName, orderString, bTreeName);
             CombinedBTree combinedBTree = new CombinedBTree(dbContext, bTreeName);
             // Start Thread.
-            CompletableFuture.runAsync(() -> populateOrder(dbContext,tableName, orderString, combinedBTree));
+            CompletableFuture.runAsync(() -> populateOrder(dbContext,this.getROM_Model().tableName, orderString, combinedBTree));
             return combinedBTree;
         }
         else {
@@ -158,7 +158,7 @@ public abstract class Model {
 
     private void populateOrder(DBContext context,String tableName, String orderString, CombinedBTree combinedBTree)
     {
-        String readTable ="SELECT row," + orderString + " FROM " + tableName+ " WHERE row!=1"; //ignore header row
+        String readTable ="SELECT row," + orderString + " FROM " + this.getROM_Model().tableName+ " WHERE row!=1"; //ignore header row
         try (AutoRollbackConnection connection = DBHandler.instance.getConnection();
              PreparedStatement stmt = connection.prepareStatement(readTable)) {
             ResultSet rs = stmt.executeQuery();
@@ -207,7 +207,7 @@ public abstract class Model {
 
     public int getSheetTableSize()
     {
-        String readTable ="SELECT count(*) FROM " + tableName+ " WHERE row!=1"; //ignore header row
+        String readTable ="SELECT count(*) FROM " + this.getROM_Model().tableName+ " WHERE row!=1"; //ignore header row
 
         int count = 0;
         try (AutoRollbackConnection connection = DBHandler.instance.getConnection();
@@ -230,7 +230,7 @@ public abstract class Model {
 
     public String getValue(int count)
     {
-        String readTable ="SELECT "+orderString+" FROM " + tableName+ " WHERE row="+count; //ignore header row
+        String readTable ="SELECT "+orderString+" FROM " + this.getROM_Model().tableName+ " WHERE row="+count; //ignore header row
         String value=null;
         try (AutoRollbackConnection connection = DBHandler.instance.getConnection();
              PreparedStatement stmt = connection.prepareStatement(readTable)) {

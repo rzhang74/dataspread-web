@@ -32,13 +32,13 @@
 											<textbox value="${each.data.summary}" readonly="true" multiline="true"/>
 										</treecell>-->
 										<treecell >
-											<zhighcharts id="ch${each.data.id}" onCreate="$composer.onChartsCreate(self)"/>
+											<!--<zhighcharts id="ch${each.data.id}" onCreate="$composer.onChartsCreate(self)"/>-->
 										</treecell>
 									</treerow>
 								</treeitem>
 							</template>
 						</tree>
-					</div>
+						</div>
 
 <!--<include vflex="1" src="~./zssapp/hierarchy.zul"></include>-->
 				</vlayout>
