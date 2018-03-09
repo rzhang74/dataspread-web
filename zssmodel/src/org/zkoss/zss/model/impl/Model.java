@@ -251,6 +251,12 @@ public abstract class Model {
 
     }
 
+    public ArrayList<Integer> getIDs(CombinedBTree combinedBTree, int startPos, int endPos) {
+        AutoRollbackConnection connection = DBHandler.instance.getConnection();
+        DBContext dbContext = new DBContext(connection);
+        return combinedBTree.getKeys(dbContext,startPos,endPos-startPos+1);
+    }
+
     public enum ModelType {
         ROM_Model, COM_Model, RCV_Model, HYBRID_Model, TOM_Model
     }

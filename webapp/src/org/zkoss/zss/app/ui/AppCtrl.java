@@ -48,6 +48,7 @@ import org.zkoss.zss.app.repository.impl.SimpleBookInfo;
 import org.zkoss.zss.app.ui.dlg.*;
 import org.zkoss.zss.model.*;
 import org.zkoss.zss.model.impl.CombinedBTree;
+import org.zkoss.zss.model.impl.Model;
 import org.zkoss.zss.model.impl.sys.navigation.Bucket;
 import org.zkoss.zss.model.impl.SheetImpl;
 import org.zkoss.zss.ui.*;
@@ -326,8 +327,10 @@ public class AppCtrl extends CtrlBase<Component> {
                 return;
             }
 
-            if(index==-1)
+            if(index==-1) {
                 updateColModel(currentSheet);
+                return;
+            }
             else
             {
                 currentSheet.getDataModel().setOrderString("col_"+index);
@@ -339,7 +342,7 @@ public class AppCtrl extends CtrlBase<Component> {
             int endPos = currentSheet.getDataModel().getSheetTableSize();
             String startVal = currentSheet.getDataModel().getValue(startPos);
             String endVal = currentSheet.getDataModel().getValue(endPos);
-            treeBucket.setModel(getSpreadsheetTreeModel(startVal,endVal,startPos,endPos));
+            treeBucket.setModel(getSpreadsheetTreeModel(currentSheet.getDataModel(),combinedBTree,startVal,endVal,startPos,endPos));
             currentSheet.fullRefresh();
         } catch (Exception e) {
             e.printStackTrace();
@@ -1366,9 +1369,9 @@ public class AppCtrl extends CtrlBase<Component> {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public TreeModel<RODTreeNode<SpreadsheetBean<String>>> getSpreadsheetTreeModel (String startVal, String endVal, int startPos, int endPos) {
+    public TreeModel<RODTreeNode<SpreadsheetBean<String>>> getSpreadsheetTreeModel (Model model, CombinedBTree combinedBTree,String startVal, String endVal, int startPos, int endPos) {
         RODTreeNode root = new RODTreeNode(null,
-                new RODTreeNode[] {new RODTreeNode(new SpreadsheetBean<String>(startVal,endVal,startPos,endPos), (List)null)
+                new RODTreeNode[] {new RODTreeNode(new SpreadsheetBean<String>(model,combinedBTree,startVal,endVal,startPos,endPos), (List)null)
                 });
         if (sheetTreeModel == null) {
             sheetTreeModel = new RODTreeModel<SpreadsheetBean<String>>(root);

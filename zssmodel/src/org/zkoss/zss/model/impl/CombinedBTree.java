@@ -39,22 +39,22 @@ public class CombinedBTree{
         return btree.getIDs(context, statistic, count, type);
     }
 
-    public ArrayList getKeys(DBContext context, int start, int count) {
+    public ArrayList<Integer> getKeys(DBContext context, int start, int count) {
 
         int jump = count/10;
-        ArrayList values=new ArrayList();
+        ArrayList<Integer> values=new ArrayList<Integer>();
 
-        CombinedStatistic statistic = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(start));//-1 to acount for the header which is not inserted
+        CombinedStatistic statistic = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(start-1));//-1 to acount for the header which is not inserted
         if(jump == 0) {
             values= btree.getIDs(context, statistic, count, AbstractStatistic.Type.COUNT);
             return values;
         }
 
-        ArrayList keys = new ArrayList();
+        ArrayList<Integer> keys = new ArrayList<Integer>();
 
         for(int i=0;i<10;i++) {
             start += jump*i;
-            statistic = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(start));//-1 to acount for the header which is not inserted
+            statistic = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(start-1));//-1 to acount for the header which is not inserted
             values = btree.getIDs(context, statistic, 1, AbstractStatistic.Type.COUNT);
             keys.add(values.get(0));
         }
