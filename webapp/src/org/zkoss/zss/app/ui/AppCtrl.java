@@ -339,7 +339,7 @@ public class AppCtrl extends CtrlBase<Component> {
 
             CombinedBTree combinedBTree = currentSheet.getDataModel().getOrder();
             int startPos = 2;//discard header
-            int endPos = currentSheet.getDataModel().getSheetTableSize();
+            int endPos = currentSheet.getDataModel().getSheetTableSize()+1;
             String startVal = currentSheet.getDataModel().getValue(startPos);
             String endVal = currentSheet.getDataModel().getValue(endPos);
             treeBucket.setModel(getSpreadsheetTreeModel(currentSheet.getDataModel(),combinedBTree,startVal,endVal,startPos,endPos));

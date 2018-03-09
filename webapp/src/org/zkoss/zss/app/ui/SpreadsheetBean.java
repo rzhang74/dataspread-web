@@ -102,17 +102,18 @@ public class SpreadsheetBean<T> extends RODTreeNodeData {
             if(i==0) {
                 startV = (T) model.getValue(startPos);
                 startP = startPos;
+                endV = (T) (model.getValue(rowIDs.get(i)));
+                endP = rowIDs.get(i);
             }
-            else {
-                startV = (T) (model.getValue(rowIDs.get(i)+1));
-                startP = rowIDs.get(i)+1;
-            }
-
-            if(i==rowIDs.size()-1) {
+            else if(i==rowIDs.size()-1) {
+                startV = (T) (model.getValue(rowIDs.get(i)));
+                startP = rowIDs.get(i);
                 endV = (T) model.getValue(endPos);
                 endP = endPos;
             }
             else {
+                startV = (T) (model.getValue(rowIDs.get(i)));
+                startP = rowIDs.get(i);
                 endV = (T) (model.getValue(rowIDs.get(i)));
                 endP = rowIDs.get(i);
             }

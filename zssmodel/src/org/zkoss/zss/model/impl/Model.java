@@ -144,6 +144,7 @@ public abstract class Model {
             bTreeName = this.getROM_Model().tableName + "_nav_" + orderString;
             insertNewOrder(this.getROM_Model().tableName, orderString, bTreeName);
             CombinedBTree combinedBTree = new CombinedBTree(dbContext, bTreeName);
+            connection.commit();
             // Start Thread.
             CompletableFuture.runAsync(() -> populateOrder(dbContext,this.getROM_Model().tableName, orderString, combinedBTree));
             return combinedBTree;
@@ -158,7 +159,7 @@ public abstract class Model {
 
     private void populateOrder(DBContext context,String tableName, String orderString, CombinedBTree combinedBTree)
     {
-        String readTable ="SELECT row," + orderString + " FROM " + this.getROM_Model().tableName+ " WHERE row!=1"; //ignore header row
+        String readTable ="SELECT row," + orderString + " FROM " + tableName+ " WHERE row!=1"; //ignore header row
         try (AutoRollbackConnection connection = DBHandler.instance.getConnection();
              PreparedStatement stmt = connection.prepareStatement(readTable)) {
             ResultSet rs = stmt.executeQuery();
@@ -179,7 +180,18 @@ public abstract class Model {
 
                 if(count%batchSize==0) {
                     combinedBTree.insertIDs(context,statistics,ids);
+                    connection.commit();
+                    ids = new ArrayList<>();
+                    statistics = new ArrayList<>();
+                    System.out.println(count+"  rows inserted");
                 }
+            }
+
+            if(count%batchSize!=0)
+            {
+                combinedBTree.insertIDs(context,statistics,ids);
+                connection.commit();
+                System.out.println(count+"  rows inserted");
             }
             rs.close();
         } catch (Exception e) {
@@ -254,7 +266,7 @@ public abstract class Model {
     public ArrayList<Integer> getIDs(CombinedBTree combinedBTree, int startPos, int endPos) {
         AutoRollbackConnection connection = DBHandler.instance.getConnection();
         DBContext dbContext = new DBContext(connection);
-        return combinedBTree.getKeys(dbContext,startPos,endPos-startPos+1);
+        return combinedBTree.getKeys(dbContext,startPos-2,endPos-startPos+1);
     }
 
     public enum ModelType {

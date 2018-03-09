@@ -44,7 +44,7 @@ public class CombinedBTree{
         int jump = count/10;
         ArrayList<Integer> values=new ArrayList<Integer>();
 
-        CombinedStatistic statistic = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(start-1));//-1 to acount for the header which is not inserted
+        CombinedStatistic statistic = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(start));//-1 to acount for the header which is not inserted
         if(jump == 0) {
             values= btree.getIDs(context, statistic, count, AbstractStatistic.Type.COUNT);
             return values;
@@ -52,9 +52,10 @@ public class CombinedBTree{
 
         ArrayList<Integer> keys = new ArrayList<Integer>();
 
+        int elem = 0;
         for(int i=0;i<10;i++) {
-            start += jump*i;
-            statistic = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(start-1));//-1 to acount for the header which is not inserted
+            elem = start+jump*i;
+            statistic = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(elem));//-1 to acount for the header which is not inserted
             values = btree.getIDs(context, statistic, 1, AbstractStatistic.Type.COUNT);
             keys.add(values.get(0));
         }
