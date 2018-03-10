@@ -266,7 +266,7 @@ public abstract class Model {
     public ArrayList<Integer> getIDs(CombinedBTree combinedBTree, int startPos, int endPos) {
         AutoRollbackConnection connection = DBHandler.instance.getConnection();
         DBContext dbContext = new DBContext(connection);
-        return combinedBTree.getKeys(dbContext,startPos-2,endPos-startPos+1);
+        return combinedBTree.getKeys(dbContext,startPos-2,endPos-2);
     }
 
     public enum ModelType {

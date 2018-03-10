@@ -39,13 +39,14 @@ public class CombinedBTree{
         return btree.getIDs(context, statistic, count, type);
     }
 
-    public ArrayList<Integer> getKeys(DBContext context, int start, int count) {
+    public ArrayList<Integer> getKeys(DBContext context, int start, int end) {
 
+        int count = end - start + 2;
         int jump = count/10;
         ArrayList<Integer> values=new ArrayList<Integer>();
 
         CombinedStatistic statistic = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(start));//-1 to acount for the header which is not inserted
-        if(jump == 0) {
+        if(jump <=1 ) {
             values= btree.getIDs(context, statistic, count, AbstractStatistic.Type.COUNT);
             return values;
         }

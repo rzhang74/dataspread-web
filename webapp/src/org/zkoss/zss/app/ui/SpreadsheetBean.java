@@ -11,8 +11,6 @@ public class SpreadsheetBean<T> extends RODTreeNodeData {
     private T maxValue;
     private int startPos;
     private int endPos;
-    private int size;
-    private int childrenCount;
     private String name;
     private String id;
     private String summary;
@@ -33,8 +31,6 @@ public class SpreadsheetBean<T> extends RODTreeNodeData {
         this.combinedBTree = combinedBTree;
         minValue = startVal;
         maxValue = endVal;
-        childrenCount = 11;
-        size = 11;
         this.startPos = startPos;
         this.endPos = endPos;
 
@@ -46,9 +42,9 @@ public class SpreadsheetBean<T> extends RODTreeNodeData {
 
     private void setSummary() {
         summary = this.getName()+"\n";
-        summary += "Sub-categories: " + this.childrenCount+"\n";
+        summary += "Sub-categories: " + getChildCount()+"\n";
         summary += "[Start,End]: ["+(this.startPos)+","+(this.endPos)+"]\n";
-        summary += "Rows: "+this.size;
+        summary += "Rows: "+getChildCount();
     }
 
     private void setId() {
@@ -99,23 +95,25 @@ public class SpreadsheetBean<T> extends RODTreeNodeData {
 
         for(int i=0;i<rowIDs.size();i++)
         {
-            if(i==0) {
-                startV = (T) model.getValue(startPos);
-                startP = startPos;
-                endV = (T) (model.getValue(rowIDs.get(i)));
-                endP = rowIDs.get(i);
-            }
-            else if(i==rowIDs.size()-1) {
-                startV = (T) (model.getValue(rowIDs.get(i)));
-                startP = rowIDs.get(i);
+            startV = (T) model.getValue(rowIDs.get(i));
+            startP = rowIDs.get(i);
+
+
+            if(i==rowIDs.size()-1) {
                 endV = (T) model.getValue(endPos);
                 endP = endPos;
             }
-            else {
-                startV = (T) (model.getValue(rowIDs.get(i)));
-                startP = rowIDs.get(i);
-                endV = (T) (model.getValue(rowIDs.get(i)));
-                endP = rowIDs.get(i);
+            else
+            {
+                if((rowIDs.get(i+1)-rowIDs.get(i))==1) {
+                    endV = (T) (model.getValue(rowIDs.get(i)));
+                    endP = rowIDs.get(i);
+                }
+                else
+                {
+                    endV = (T) model.getValue(rowIDs.get(i+1)-1);
+                    endP = rowIDs.get(i+1)-1;
+                }
             }
 
             _children.add(new SpreadsheetBean<T>(model,combinedBTree,startV,endV,startP,endP));
@@ -130,6 +128,9 @@ public class SpreadsheetBean<T> extends RODTreeNodeData {
      */
     public int getChildCount () {
 
-        return childrenCount;
+        if (_children == null)
+            return 10;
+
+        return _children.size();
     }
 }

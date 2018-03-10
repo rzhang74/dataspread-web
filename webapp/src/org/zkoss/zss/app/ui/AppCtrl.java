@@ -339,7 +339,7 @@ public class AppCtrl extends CtrlBase<Component> {
 
             CombinedBTree combinedBTree = currentSheet.getDataModel().getOrder();
             int startPos = 2;//discard header
-            int endPos = currentSheet.getDataModel().getSheetTableSize()+1;
+            int endPos = currentSheet.getDataModel().getSheetTableSize();
             String startVal = currentSheet.getDataModel().getValue(startPos);
             String endVal = currentSheet.getDataModel().getValue(endPos);
             treeBucket.setModel(getSpreadsheetTreeModel(currentSheet.getDataModel(),combinedBTree,startVal,endVal,startPos,endPos));
@@ -1382,11 +1382,11 @@ public class AppCtrl extends CtrlBase<Component> {
 
 
     @Listen("onSelect = #treeBucket")
-    public void updateSelectedDirectory (SelectEvent event) {
+    public void nodeSelected (SelectEvent event) {
         Set s = event.getSelectedObjects();
         if (s != null && s.size() > 0) {
             selectedNode = ((RODTreeNode<SpreadsheetBean<String>>)s.iterator().next()).getData();
-            System.out.println("selected: " + selectedNode.getName() + ", path = " + selectedNode.getSummary());
+            //System.out.println("selected: " + selectedNode.getName() + ", path = " + selectedNode.getSummary());
         }
     }
     /*public void nodeSelected() {
