@@ -12,6 +12,7 @@ public class SpreadsheetBean<T> extends RODTreeNodeData {
     private T maxValue;
     private int startPos;
     private int endPos;
+    private int size;
     private String name;
     private String id;
     private String summary;
@@ -32,6 +33,7 @@ public class SpreadsheetBean<T> extends RODTreeNodeData {
         maxValue = endVal;
         this.startPos = startPos;
         this.endPos = endPos;
+        size = (this.endPos-this.startPos+1);
 
         this.setName(false);
         this.setId();
@@ -43,7 +45,7 @@ public class SpreadsheetBean<T> extends RODTreeNodeData {
         summary = this.getName()+"\n";
         summary += "Sub-categories: " + getChildCount()+"\n";
         summary += "[Start,End]: ["+(this.startPos)+","+(this.endPos)+"]\n";
-        summary += "Rows: "+getChildCount();
+        summary += "Rows: "+this.size;
     }
 
     private void setId() {
@@ -77,14 +79,16 @@ public class SpreadsheetBean<T> extends RODTreeNodeData {
     public String getSummary () {
         return this.summary;
     }
-    /**
-     * implement {@link RODTreeNodeData#getChildren()}
-     */
-    public List<SpreadsheetBean<T>> getChildren() {
+
+    public void set_children()
+    {
         if (_children == null) {
             _children = new ArrayList<SpreadsheetBean<T>>();
 
         }
+
+        if(this.endPos==this.startPos)
+            return;
 
         //TODO:generate children using model and combinedBTree
         ArrayList<KeyIndexMap> kim = model.getIDs(startPos,endPos);
@@ -94,15 +98,96 @@ public class SpreadsheetBean<T> extends RODTreeNodeData {
 
         for(int i=0;i<kim.size();i++)
         {
-            startV = (T) kim.get(i).getKey();
-            startP = kim.get(i).getPos();
+            if(jump<=1) {
+                startV = (T) kim.get(i).getKey();
+                startP = kim.get(i).getPos();
 
-            endV = (T) kim.get(i).getKey();
-            endP = kim.get(i).getPos();
+                endV = (T) kim.get(i).getKey();
+                endP = kim.get(i).getPos();
+            }
+            else
+            {
+                if(i==kim.size()-1)
+                {
+                    startV = (T) kim.get(i).getKey();
+                    startP = kim.get(i).getPos();
+
+                    endP = endPos;
+                    endV = (T) model.getValueFromTree(endP);
+                }
+                else{
+
+                    startV = (T) kim.get(i).getKey();
+                    startP = kim.get(i).getPos();
+
+                    endP = kim.get(i+1).getPos()-1;
+                    endV = (T) model.getValueFromTree(endP);
+
+                }
+
+
+            }
 
 
             _children.add(new SpreadsheetBean<T>(model,startV,endV,startP,endP));
         }
+
+        this.setSummary();
+    }
+
+    /**
+     * implement {@link RODTreeNodeData#getChildren()}
+     */
+    public List<SpreadsheetBean<T>> getChildren() {
+        /*if (_children == null) {
+            _children = new ArrayList<SpreadsheetBean<T>>();
+
+        }
+
+        if(this.endPos==this.startPos)
+            return _children;
+
+        //TODO:generate children using model and combinedBTree
+        ArrayList<KeyIndexMap> kim = model.getIDs(startPos,endPos);
+        int jump = (endPos-startPos+1)/10;
+        T startV,endV;
+        int startP,endP;
+
+        for(int i=0;i<kim.size();i++)
+        {
+            if(jump<=1) {
+                startV = (T) kim.get(i).getKey();
+                startP = kim.get(i).getPos();
+
+                endV = (T) kim.get(i).getKey();
+                endP = kim.get(i).getPos();
+            }
+            else
+            {
+                if(i==kim.size()-1)
+                {
+                    startV = (T) kim.get(i).getKey();
+                    startP = kim.get(i).getPos();
+
+                    endP = endPos;
+                    endV = (T) model.getValueFromTree(endP);
+                }
+                else{
+
+                    startV = (T) kim.get(i).getKey();
+                    startP = kim.get(i).getPos();
+
+                    endP = kim.get(i+1).getPos()-1;
+                    endV = (T) model.getValueFromTree(endP);
+
+                }
+
+
+            }
+
+
+            _children.add(new SpreadsheetBean<T>(model,startV,endV,startP,endP));
+        }*/
 
 
         return _children;
@@ -114,8 +199,20 @@ public class SpreadsheetBean<T> extends RODTreeNodeData {
     public int getChildCount () {
 
         if (_children == null)
-            return 10;
+            return 0;
 
         return _children.size();
+    }
+
+    public int getStartPos() {
+        return startPos;
+    }
+
+    public int getEndPos() {
+        return endPos;
+    }
+
+    public int getSize() {
+        return size;
     }
 }

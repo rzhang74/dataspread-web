@@ -122,6 +122,8 @@ public class AppCtrl extends CtrlBase<Component> {
     Html usersPopContent; //ZSS-998
     @Wire
     Window mainWin;
+    @Wire
+    Button refresh;
 
     BookInfo selectedBookInfo;
     Book loadedBook;
@@ -137,6 +139,8 @@ public class AppCtrl extends CtrlBase<Component> {
     private SimpleExtXYModel dataChartModel25;
 
     private Map<String,Bucket<String>> navSBucketMap = new HashMap<String,Bucket<String>>();
+    private Map<String,SpreadsheetBean<String>> navSSBeanMap = new HashMap<String,SpreadsheetBean<String>>();
+
 
     private Map<String,Integer> navSBucketLevel = new HashMap<String,Integer>();
 
@@ -145,7 +149,9 @@ public class AppCtrl extends CtrlBase<Component> {
     private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
 
     RODTreeModel<SpreadsheetBean<String>> sheetTreeModel;
-    SpreadsheetBean<String> selectedNode;
+    RODTreeNode currentNode;
+    RODTreeNode currentNodeParent;
+    SpreadsheetBean<String> selectedNodeData;
 
     @Wire
     private Tree treeBucket;
@@ -340,6 +346,7 @@ public class AppCtrl extends CtrlBase<Component> {
 
             CombinedBTree combinedBTree = currentSheet.getDataModel().getOrder();
             //TODO: handle no tree insertions. right now wait()
+            navSSBeanMap.clear();
 
             TimeUnit.SECONDS.sleep(5);
             int startPos = 2;//discard header
@@ -1282,8 +1289,9 @@ public class AppCtrl extends CtrlBase<Component> {
         // Basic column
 
         //================================================================================
-
-        Bucket<String> currentBucket = navSBucketMap.get(chartComp25.getId());
+        if(navSSBeanMap.size()==0)
+            return;
+        SpreadsheetBean<String> currentBucket = navSSBeanMap.get(chartComp25.getId());
 
         String [] colors = {"#F6546A","#C998FD","#FF8247","#B9E4F1","#A99A91","#382755"};
         chartComp25.setType("column");
@@ -1294,12 +1302,12 @@ public class AppCtrl extends CtrlBase<Component> {
         chartComp25.setHeight("200px");
 
 
-        if(currentBucket.getChildrenCount() > 0)
+        if(currentBucket.getChildCount() > 0)
             xAxisLabels = "{categories: ['"+currentBucket.getChildren().get(0).getName()+"'";
         else
             xAxisLabels = "{categories: ['"+currentBucket.getName()+"'";
 
-        for(int i=1;i<currentBucket.getChildrenCount();i++)
+        for(int i=1;i<currentBucket.getChildCount();i++)
             xAxisLabels += ",'"+currentBucket.getChildren().get(i).getName()+"'";
 
         chartComp25.setxAxisOptions(xAxisLabels+"],"+
@@ -1341,7 +1349,7 @@ public class AppCtrl extends CtrlBase<Component> {
         chartComp25.setPlotOptions(//"["+
                 "{" +
                     "column: {" +
-                        "color: \'"+colors[navSBucketLevel.get(chartComp25.getId())]+"\',"+
+                        "color: \'"+colors[0]+"\',"+
                         "pointPadding: 0.2," +
                         "borderWidth: 0," +
                         "point: {"+
@@ -1359,10 +1367,10 @@ public class AppCtrl extends CtrlBase<Component> {
         dataChartModel25 = new SimpleExtXYModel();
         chartComp25.setModel(dataChartModel25);
 
-        for(int i = 0; i < currentBucket.getChildrenCount(); i++)
+        for(int i = 0; i < currentBucket.getChildCount(); i++)
             dataChartModel25.addValue(currentBucket.getName(), i, currentBucket.getChildren().get(i).getSize());
 
-        if(currentBucket.getChildrenCount()==0)
+        if(currentBucket.getChildCount()==0)
             dataChartModel25.addValue(currentBucket.getName(),0,currentBucket.getSize());
 
     }
@@ -1377,7 +1385,11 @@ public class AppCtrl extends CtrlBase<Component> {
         RODTreeNode root = new RODTreeNode(null,
                 new RODTreeNode[] {new RODTreeNode(new SpreadsheetBean<String>(model,startVal,endVal,startPos,endPos), (List)null)
                 });
-        return new RODTreeModel<SpreadsheetBean<String>>(root);
+        sheetTreeModel = new RODTreeModel<SpreadsheetBean<String>>(root);
+
+        currentNode = root;
+
+        return sheetTreeModel;
 
     }
 
@@ -1387,8 +1399,15 @@ public class AppCtrl extends CtrlBase<Component> {
     public void nodeSelected (SelectEvent event) {
         Set s = event.getSelectedObjects();
         if (s != null && s.size() > 0) {
-            selectedNode = ((RODTreeNode<SpreadsheetBean<String>>)s.iterator().next()).getData();
-            //System.out.println("selected: " + selectedNode.getName() + ", path = " + selectedNode.getSummary());
+
+            currentNode = (RODTreeNode<SpreadsheetBean<String>>)s.iterator().next();
+            currentNodeParent = currentNode.getParent();
+            selectedNodeData = ((RODTreeNode<SpreadsheetBean<String>>)s.iterator().next()).getData();
+            int start = selectedNodeData.getStartPos();
+            int end = selectedNodeData.getEndPos();
+            String bucketName = selectedNodeData.getName();
+            ss.focusTo(start-1,0);
+
         }
     }
     /*public void nodeSelected() {
@@ -1420,6 +1439,44 @@ public class AppCtrl extends CtrlBase<Component> {
 
     }
 
+    @Listen("onClick=#refresh")
+    public void recreateTree()
+    {
+        System.out.println("Button Clicked!!!!!");
+        if(currentNodeParent==null)//current node is root
+        {
+            for(int i=0;i<currentNode.getChildCount();i++)
+            {
+                SpreadsheetBean<String> data= (SpreadsheetBean<String>)sheetTreeModel.getChild(currentNode,i).getData();
+                data.set_children();
+                navSSBeanMap.put("ch" + data.getId(), data);
+            }
+
+            sheetTreeModel = new RODTreeModel<SpreadsheetBean<String>>(currentNode);
+        }
+        else
+        {
+            for(int i=0;i<currentNodeParent.getChildCount();i++)
+            {
+                SpreadsheetBean<String> data= (SpreadsheetBean<String>)sheetTreeModel.getChild(currentNodeParent,i).getData();
+                data.set_children();
+            }
+
+            RODTreeNode tempNode = currentNodeParent;
+            SpreadsheetBean<String> data = (SpreadsheetBean<String>) currentNodeParent.getData();
+            navSSBeanMap.put("ch" + data.getId(), data);
+
+            while (tempNode.getParent()!=null)
+                tempNode = tempNode.getParent();
+
+
+            sheetTreeModel = new RODTreeModel<SpreadsheetBean<String>>(tempNode);
+
+        }
+
+        treeBucket.setModel(sheetTreeModel);
+
+    }
 
     private void updateColModel(SSheet currentSheet) {
 
