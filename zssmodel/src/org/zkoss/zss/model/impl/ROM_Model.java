@@ -795,4 +795,8 @@ public class ROM_Model extends Model {
         throw new UnsupportedOperationException();
     }
 
+    public void updateOrder(CombinedBTree combinedBTree, String orderString) {
+        this.rowCombinedTree = combinedBTree;
+        this.setOrderString(orderString);
+    }
 }

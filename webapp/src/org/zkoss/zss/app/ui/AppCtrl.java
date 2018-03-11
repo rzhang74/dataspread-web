@@ -68,6 +68,7 @@ import java.io.*;
 import java.net.URLDecoder;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -338,11 +339,14 @@ public class AppCtrl extends CtrlBase<Component> {
             }
 
             CombinedBTree combinedBTree = currentSheet.getDataModel().getOrder();
+            //TODO: handle no tree insertions. right now wait()
+
+            TimeUnit.SECONDS.sleep(5);
             int startPos = 2;//discard header
-            int endPos = currentSheet.getDataModel().getSheetTableSize();
-            String startVal = currentSheet.getDataModel().getValue(startPos);
-            String endVal = currentSheet.getDataModel().getValue(endPos);
-            treeBucket.setModel(getSpreadsheetTreeModel(currentSheet.getDataModel(),combinedBTree,startVal,endVal,startPos,endPos));
+            int endPos = startPos+currentSheet.getDataModel().getSheetTableSize()-1;
+            String startVal = currentSheet.getDataModel().getValueFromTree(startPos);
+            String endVal = currentSheet.getDataModel().getValueFromTree(endPos);
+            treeBucket.setModel(getSpreadsheetTreeModel(currentSheet.getDataModel(),startVal,endVal,startPos,endPos));
             currentSheet.fullRefresh();
         } catch (Exception e) {
             e.printStackTrace();
@@ -1369,14 +1373,12 @@ public class AppCtrl extends CtrlBase<Component> {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public TreeModel<RODTreeNode<SpreadsheetBean<String>>> getSpreadsheetTreeModel (Model model, CombinedBTree combinedBTree,String startVal, String endVal, int startPos, int endPos) {
+    public TreeModel<RODTreeNode<SpreadsheetBean<String>>> getSpreadsheetTreeModel (Model model, String startVal, String endVal, int startPos, int endPos) {
         RODTreeNode root = new RODTreeNode(null,
-                new RODTreeNode[] {new RODTreeNode(new SpreadsheetBean<String>(model,combinedBTree,startVal,endVal,startPos,endPos), (List)null)
+                new RODTreeNode[] {new RODTreeNode(new SpreadsheetBean<String>(model,startVal,endVal,startPos,endPos), (List)null)
                 });
-        if (sheetTreeModel == null) {
-            sheetTreeModel = new RODTreeModel<SpreadsheetBean<String>>(root);
-        }
-        return sheetTreeModel;
+        return new RODTreeModel<SpreadsheetBean<String>>(root);
+
     }
 
 

@@ -5,7 +5,9 @@ import org.model.DBContext;
 import org.model.DBHandler;
 import org.zkoss.zss.model.CellRegion;
 import org.zkoss.zss.model.SSheet;
+import org.zkoss.zss.model.impl.statistic.AbstractStatistic;
 import org.zkoss.zss.model.impl.statistic.CombinedStatistic;
+import org.zkoss.zss.model.impl.statistic.CountStatistic;
 import org.zkoss.zss.model.impl.statistic.KeyStatistic;
 import org.zkoss.zss.model.impl.sys.navigation.Bucket;
 import org.zkoss.zss.model.impl.sys.navigation.NavigationStructure;
@@ -145,6 +147,8 @@ public abstract class Model {
             insertNewOrder(this.getROM_Model().tableName, orderString, bTreeName);
             CombinedBTree combinedBTree = new CombinedBTree(dbContext, bTreeName);
             connection.commit();
+            //assisn new BTree to rom model
+            getROM_Model().updateOrder(combinedBTree,orderString);
             // Start Thread.
             CompletableFuture.runAsync(() -> populateOrder(dbContext,this.getROM_Model().tableName, orderString, combinedBTree));
             return combinedBTree;
@@ -152,7 +156,10 @@ public abstract class Model {
         else {
             AutoRollbackConnection connection = DBHandler.instance.getConnection();
             DBContext dbContext = new DBContext(connection);
-            return  new CombinedBTree(dbContext, bTreeName);
+            CombinedBTree combinedBTree = new CombinedBTree(dbContext, bTreeName);
+            getROM_Model().updateOrder(combinedBTree,orderString);
+            connection.commit();
+            return  getROM_Model().rowCombinedTree;
         }
     }
 
@@ -240,33 +247,82 @@ public abstract class Model {
         return count;
     }
 
-    public String getValue(int count)
+    public String getValueFromTree(int count)
     {
-        String readTable ="SELECT "+orderString+" FROM " + this.getROM_Model().tableName+ " WHERE row="+count; //ignore header row
-        String value=null;
+        AutoRollbackConnection connection = DBHandler.instance.getConnection();
+        DBContext dbContext = new DBContext(connection);
+        ArrayList<Integer> values=new ArrayList<Integer>();
+        CombinedStatistic statistics = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(count-2));//index stars with 0, for pos 1
+
+        values = this.getROM_Model().rowCombinedTree.getIDs(dbContext, statistics, 1, AbstractStatistic.Type.COUNT);
+
+
+        return this.getValueFromSheetTable(values.get(0));
+
+    }
+
+    public String getValueFromSheetTable(int count)
+    {
+        String readTable ="SELECT "+orderString+" FROM " + this.getROM_Model().tableName+ " WHERE row = ?"; //ignore header row
+
+       String value=null;
         try (AutoRollbackConnection connection = DBHandler.instance.getConnection();
              PreparedStatement stmt = connection.prepareStatement(readTable)) {
+
+            DBContext dbContext = new DBContext(connection);
+
+            stmt.setInt(1, count);
             ResultSet rs = stmt.executeQuery();
 
 
             if (rs.next()) {
 
-                 value= new String(rs.getBytes(1),"UTF-8");
+                value= new String(rs.getBytes(1),"UTF-8");
 
             }
             rs.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return value;
 
     }
 
-    public ArrayList<Integer> getIDs(CombinedBTree combinedBTree, int startPos, int endPos) {
+    public ArrayList<KeyIndexMap> getIDs(int startPos, int endPos) {
+        ArrayList<KeyIndexMap> kim = new ArrayList<KeyIndexMap>();
+        ArrayList<Integer> rowIDs = new ArrayList<Integer>();
+        ArrayList<Integer> bTreePostion = new ArrayList<Integer>();
+
         AutoRollbackConnection connection = DBHandler.instance.getConnection();
         DBContext dbContext = new DBContext(connection);
-        return combinedBTree.getKeys(dbContext,startPos-2,endPos-2);
+
+        int count = endPos - startPos + 1;
+        int jump = count/10;
+
+        if(jump <=1 ) {
+            rowIDs = getROM_Model().rowCombinedTree.getKeys(dbContext,startPos-2,endPos-2);
+        }
+        else
+        {
+            int elem = 0;
+            for(int i=0;i<10;i++) {
+                elem = (startPos-2)+jump*i;
+                bTreePostion.add(elem+2);//restore position in sheet
+                rowIDs.add(getROM_Model().rowCombinedTree.getKey(dbContext,elem));
+            }
+        }
+
+        int pos = 0;
+        for(int i=0;i<rowIDs.size();i++)
+        {
+            if(bTreePostion.size()==0)
+                pos = startPos+i;
+            else
+                pos = bTreePostion.get(i);
+            kim.add(new KeyIndexMap(this.getValueFromSheetTable(rowIDs.get(i)),pos));
+        }
+
+        return kim;
     }
 
     public enum ModelType {

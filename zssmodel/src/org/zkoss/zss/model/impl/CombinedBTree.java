@@ -1,5 +1,6 @@
 package org.zkoss.zss.model.impl;
 
+import org.apache.xmlbeans.impl.piccolo.util.IndexedObject;
 import org.model.BlockStore;
 import org.model.DBContext;
 import org.zkoss.zss.model.impl.statistic.AbstractStatistic;
@@ -41,28 +42,24 @@ public class CombinedBTree{
 
     public ArrayList<Integer> getKeys(DBContext context, int start, int end) {
 
-        int count = end - start + 2;
-        int jump = count/10;
-        ArrayList<Integer> values=new ArrayList<Integer>();
+        ArrayList<Integer> keys = new ArrayList<Integer>();
 
         CombinedStatistic statistic = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(start));//-1 to acount for the header which is not inserted
-        if(jump <=1 ) {
-            values= btree.getIDs(context, statistic, count, AbstractStatistic.Type.COUNT);
-            return values;
-        }
+        keys= btree.getIDs(context, statistic, end-start+1, AbstractStatistic.Type.COUNT);
+        return keys;
+
+    }
+
+    public int getKey(DBContext context, int start) {
 
         ArrayList<Integer> keys = new ArrayList<Integer>();
 
-        int elem = 0;
-        for(int i=0;i<10;i++) {
-            elem = start+jump*i;
-            statistic = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(elem));//-1 to acount for the header which is not inserted
-            values = btree.getIDs(context, statistic, 1, AbstractStatistic.Type.COUNT);
-            keys.add(values.get(0));
-        }
+        CombinedStatistic statistic = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(start));//-1 to acount for the header which is not inserted
+        keys= btree.getIDs(context, statistic, 1, AbstractStatistic.Type.COUNT);
+        return keys.get(0);
 
-        return keys;
     }
+
 
     public ArrayList deleteIDs(DBContext context, ArrayList<CombinedStatistic> statistics, AbstractStatistic.Type type) {
         return btree.deleteIDs(context, statistics, type);

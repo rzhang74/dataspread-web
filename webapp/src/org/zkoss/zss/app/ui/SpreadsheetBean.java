@@ -1,6 +1,7 @@
 package org.zkoss.zss.app.ui;
 
 import org.zkoss.zss.model.impl.CombinedBTree;
+import org.zkoss.zss.model.impl.KeyIndexMap;
 import org.zkoss.zss.model.impl.Model;
 
 import java.util.ArrayList;
@@ -17,7 +18,6 @@ public class SpreadsheetBean<T> extends RODTreeNodeData {
 
     private ArrayList<SpreadsheetBean<T>> _children;
     private Model model;
-    private CombinedBTree combinedBTree;
 
     SpreadsheetBean()
     {
@@ -25,10 +25,9 @@ public class SpreadsheetBean<T> extends RODTreeNodeData {
     }
 
     // constructor
-    public SpreadsheetBean(Model model,CombinedBTree combinedBTree,T startVal, T endVal, int startPos, int endPos) {
+    public SpreadsheetBean(Model model,T startVal, T endVal, int startPos, int endPos) {
 
         this.model = model;
-        this.combinedBTree = combinedBTree;
         minValue = startVal;
         maxValue = endVal;
         this.startPos = startPos;
@@ -88,35 +87,21 @@ public class SpreadsheetBean<T> extends RODTreeNodeData {
         }
 
         //TODO:generate children using model and combinedBTree
-        ArrayList<Integer> rowIDs = model.getIDs(combinedBTree,startPos,endPos);
-
+        ArrayList<KeyIndexMap> kim = model.getIDs(startPos,endPos);
+        int jump = (endPos-startPos+1)/10;
         T startV,endV;
         int startP,endP;
 
-        for(int i=0;i<rowIDs.size();i++)
+        for(int i=0;i<kim.size();i++)
         {
-            startV = (T) model.getValue(rowIDs.get(i));
-            startP = rowIDs.get(i);
+            startV = (T) kim.get(i).getKey();
+            startP = kim.get(i).getPos();
+
+            endV = (T) kim.get(i).getKey();
+            endP = kim.get(i).getPos();
 
 
-            if(i==rowIDs.size()-1) {
-                endV = (T) model.getValue(endPos);
-                endP = endPos;
-            }
-            else
-            {
-                if((rowIDs.get(i+1)-rowIDs.get(i))==1) {
-                    endV = (T) (model.getValue(rowIDs.get(i)));
-                    endP = rowIDs.get(i);
-                }
-                else
-                {
-                    endV = (T) model.getValue(rowIDs.get(i+1)-1);
-                    endP = rowIDs.get(i+1)-1;
-                }
-            }
-
-            _children.add(new SpreadsheetBean<T>(model,combinedBTree,startV,endV,startP,endP));
+            _children.add(new SpreadsheetBean<T>(model,startV,endV,startP,endP));
         }
 
 
