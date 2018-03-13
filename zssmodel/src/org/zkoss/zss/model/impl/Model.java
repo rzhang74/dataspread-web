@@ -139,28 +139,35 @@ public abstract class Model {
             e.printStackTrace();
         }
 
-        if (bTreeName==null)
-        {
-            AutoRollbackConnection connection = DBHandler.instance.getConnection();
-            DBContext dbContext = new DBContext(connection);
-            bTreeName = this.getROM_Model().tableName + "_nav_" + orderString;
-            insertNewOrder(this.getROM_Model().tableName, orderString, bTreeName);
-            CombinedBTree combinedBTree = new CombinedBTree(dbContext, bTreeName);
-            connection.commit();
-            //assisn new BTree to rom model
-            getROM_Model().updateOrder(combinedBTree,orderString);
-            // Start Thread.
-            CompletableFuture.runAsync(() -> populateOrder(dbContext,this.getROM_Model().tableName, orderString, combinedBTree));
-            return combinedBTree;
-        }
-        else {
-            AutoRollbackConnection connection = DBHandler.instance.getConnection();
-            DBContext dbContext = new DBContext(connection);
-            CombinedBTree combinedBTree = new CombinedBTree(dbContext, bTreeName);
-            getROM_Model().updateOrder(combinedBTree,orderString);
-            connection.commit();
-            return  getROM_Model().rowCombinedTree;
-        }
+        //TODO:handle autorollback here
+        //try (AutoRollbackConnection connection = DBHandler.instance.getConnection())
+        //{
+            if (bTreeName==null)
+            {
+                AutoRollbackConnection connection = DBHandler.instance.getConnection();
+                DBContext dbContext = new DBContext(connection);
+                bTreeName = this.getROM_Model().tableName + "_nav_" + orderString;
+                insertNewOrder(this.getROM_Model().tableName, orderString, bTreeName);
+                CombinedBTree combinedBTree = new CombinedBTree(dbContext, bTreeName);
+                connection.commit();
+                //assisn new BTree to rom model
+                getROM_Model().updateOrder(combinedBTree,orderString);
+                // Start Thread.
+                CompletableFuture.runAsync(() -> populateOrder(dbContext,this.getROM_Model().tableName, orderString, combinedBTree));
+                return combinedBTree;
+            }
+            else {
+                AutoRollbackConnection connection = DBHandler.instance.getConnection();
+                DBContext dbContext = new DBContext(connection);
+                CombinedBTree combinedBTree = new CombinedBTree(dbContext, bTreeName);
+                getROM_Model().updateOrder(combinedBTree,orderString);
+                connection.commit();
+                return  getROM_Model().rowCombinedTree;
+            }
+        //} catch (Exception e) {
+        //    e.printStackTrace();
+        //}
+        //return null;
     }
 
 
@@ -249,16 +256,21 @@ public abstract class Model {
 
     public String getValueFromTree(int count)
     {
-        AutoRollbackConnection connection = DBHandler.instance.getConnection();
-        DBContext dbContext = new DBContext(connection);
-        ArrayList<Integer> values=new ArrayList<Integer>();
-        CombinedStatistic statistics = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(count-2));//index stars with 0, for pos 1
+        try (AutoRollbackConnection connection = DBHandler.instance.getConnection();) {
 
-        values = this.getROM_Model().rowCombinedTree.getIDs(dbContext, statistics, 1, AbstractStatistic.Type.COUNT);
+            DBContext dbContext = new DBContext(connection);
+            ArrayList<Integer> values = new ArrayList<Integer>();
+            CombinedStatistic statistics = new CombinedStatistic(new KeyStatistic(30), new CountStatistic(count - 2));//index stars with 0, for pos 1
+
+            values = this.getROM_Model().rowCombinedTree.getIDs(dbContext, statistics, 1, AbstractStatistic.Type.COUNT);
 
 
-        return this.getValueFromSheetTable(values.get(0));
-
+            return this.getValueFromSheetTable(values.get(0));
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public String getValueFromSheetTable(int count)
@@ -293,35 +305,38 @@ public abstract class Model {
         ArrayList<Integer> rowIDs = new ArrayList<Integer>();
         ArrayList<Integer> bTreePostion = new ArrayList<Integer>();
 
-        AutoRollbackConnection connection = DBHandler.instance.getConnection();
-        DBContext dbContext = new DBContext(connection);
-
-        int count = endPos - startPos + 1;
-        int jump = count/10;
-
-        if(jump <=1 ) {
-            rowIDs = getROM_Model().rowCombinedTree.getKeys(dbContext,startPos-2,endPos-2);
-        }
-        else
+        try (AutoRollbackConnection connection = DBHandler.instance.getConnection();)
         {
-            int elem = 0;
-            for(int i=0;i<10;i++) {
-                elem = (startPos-2)+jump*i;
-                bTreePostion.add(elem+2);//restore position in sheet
-                rowIDs.add(getROM_Model().rowCombinedTree.getKey(dbContext,elem));
+             DBContext dbContext = new DBContext(connection);
+
+            int count = endPos - startPos + 1;
+            int jump = count/10;
+
+            if(jump <=1 ) {
+                rowIDs = getROM_Model().rowCombinedTree.getKeys(dbContext,startPos-2,endPos-2);
             }
-        }
-
-        int pos = 0;
-        for(int i=0;i<rowIDs.size();i++)
-        {
-            if(bTreePostion.size()==0)
-                pos = startPos+i;
             else
-                pos = bTreePostion.get(i);
-            kim.add(new KeyIndexMap(this.getValueFromSheetTable(rowIDs.get(i)),pos));
-        }
+            {
+                int elem = 0;
+                for(int i=0;i<10;i++) {
+                    elem = (startPos-2)+jump*i;
+                    bTreePostion.add(elem+2);//restore position in sheet
+                    rowIDs.add(getROM_Model().rowCombinedTree.getKey(dbContext,elem));
+                }
+            }
 
+            int pos = 0;
+            for(int i=0;i<rowIDs.size();i++)
+            {
+                if(bTreePostion.size()==0)
+                    pos = startPos+i;
+                else
+                    pos = bTreePostion.get(i);
+                kim.add(new KeyIndexMap(this.getValueFromSheetTable(rowIDs.get(i)),pos));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return kim;
     }
 
