@@ -148,16 +148,15 @@ public abstract class Model {
                 DBContext dbContext = new DBContext(connection);
                 bTreeName = this.getROM_Model().tableName + "_nav_" + orderString;
                 insertNewOrder(this.getROM_Model().tableName, orderString, bTreeName);
-                CombinedBTree combinedBTree = new CombinedBTree(dbContext, bTreeName);
+                getROM_Model().rowCombinedTree = new CombinedBTree(dbContext, bTreeName);
                 connection.commit();
                 //assisn new BTree to rom model
-                getROM_Model().updateOrder(combinedBTree,orderString);
+                getROM_Model().updateOrder(getROM_Model().rowCombinedTree,orderString);
                 // Start Thread.
-                //synchronized (combinedBTree) {
-                    CompletableFuture.runAsync(() -> populateOrder(dbContext,this.getROM_Model().tableName, orderString, combinedBTree));
-                //}
+                CompletableFuture.runAsync(() -> populateOrder(dbContext,this.getROM_Model().tableName, orderString, getROM_Model().rowCombinedTree));
 
-                return combinedBTree;
+
+                return getROM_Model().rowCombinedTree;
             }
             else {
                 AutoRollbackConnection connection = DBHandler.instance.getConnection();
@@ -201,6 +200,16 @@ public abstract class Model {
                     ids = new ArrayList<>();
                     statistics = new ArrayList<>();
                     System.out.println(count+"  rows inserted");
+                    System.out.println("In Model: "+combinedBTree);
+                    try {
+                        synchronized (combinedBTree)
+                        {
+                            combinedBTree.notify();
+                        }
+
+                    } catch (Exception e) {
+                        //e.printStackTrace();
+                    }
                 }
             }
 
@@ -209,6 +218,14 @@ public abstract class Model {
                 combinedBTree.insertIDs(context,statistics,ids);
                 connection.commit();
                 System.out.println(count+"  rows inserted");
+                try {
+                    synchronized (combinedBTree)
+                    {
+                        combinedBTree.notify();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
             rs.close();
         } catch (Exception e) {

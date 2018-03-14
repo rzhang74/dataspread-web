@@ -349,8 +349,11 @@ public class AppCtrl extends CtrlBase<Component> {
             //navSSBeanMap.clear();
 
             synchronized (combinedBTree) {
-                while (combinedBTree.getSize()<2)
+                while (combinedBTree.getSize()<2) {
+                    System.out.println("In appctrl: "+combinedBTree);
+                    System.out.println("In appctrl: "+combinedBTree.getSize());
                     combinedBTree.wait();
+                }
                 int startPos = 2;//discard header
                 int endPos = combinedBTree.getSize();//startPos+currentSheet.getDataModel().getSheetTableSize()-1;
                 String startVal = currentSheet.getDataModel().getValueFromTree(startPos);
