@@ -153,7 +153,10 @@ public abstract class Model {
                 //assisn new BTree to rom model
                 getROM_Model().updateOrder(combinedBTree,orderString);
                 // Start Thread.
-                CompletableFuture.runAsync(() -> populateOrder(dbContext,this.getROM_Model().tableName, orderString, combinedBTree));
+                //synchronized (combinedBTree) {
+                    CompletableFuture.runAsync(() -> populateOrder(dbContext,this.getROM_Model().tableName, orderString, combinedBTree));
+                //}
+
                 return combinedBTree;
             }
             else {

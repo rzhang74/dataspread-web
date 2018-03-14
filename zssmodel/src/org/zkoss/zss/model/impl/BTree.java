@@ -28,6 +28,7 @@ public class BTree <K extends AbstractStatistic> {
      * The block storage mechanism
      */
     public BlockStore bs;
+    private int size;
     private MetaDataBlock metaDataBlock;
 
 
@@ -604,6 +605,10 @@ public class BTree <K extends AbstractStatistic> {
             get_count++;
         }
         return ids;
+    }
+
+    public int getSize() {
+        return size;
     }
 
 

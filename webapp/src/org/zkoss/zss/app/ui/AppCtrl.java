@@ -139,7 +139,7 @@ public class AppCtrl extends CtrlBase<Component> {
     private SimpleExtXYModel dataChartModel25;
 
     private Map<String,Bucket<String>> navSBucketMap = new HashMap<String,Bucket<String>>();
-    private Map<String,SpreadsheetBean<String>> navSSBeanMap = new HashMap<String,SpreadsheetBean<String>>();
+    //private Map<String,SpreadsheetBean<String>> navSSBeanMap = new HashMap<String,SpreadsheetBean<String>>();
 
 
     private Map<String,Integer> navSBucketLevel = new HashMap<String,Integer>();
@@ -346,14 +346,17 @@ public class AppCtrl extends CtrlBase<Component> {
 
             CombinedBTree combinedBTree = currentSheet.getDataModel().getOrder();
             //TODO: handle no tree insertions. right now wait()
-            navSSBeanMap.clear();
+            //navSSBeanMap.clear();
 
-            TimeUnit.SECONDS.sleep(5);
-            int startPos = 2;//discard header
-            int endPos = startPos+currentSheet.getDataModel().getSheetTableSize()-1;
-            String startVal = currentSheet.getDataModel().getValueFromTree(startPos);
-            String endVal = currentSheet.getDataModel().getValueFromTree(endPos);
-            treeBucket.setModel(getSpreadsheetTreeModel(currentSheet.getDataModel(),startVal,endVal,startPos,endPos));
+            synchronized (combinedBTree) {
+                while (combinedBTree.getSize()<2)
+                    combinedBTree.wait();
+                int startPos = 2;//discard header
+                int endPos = combinedBTree.getSize();//startPos+currentSheet.getDataModel().getSheetTableSize()-1;
+                String startVal = currentSheet.getDataModel().getValueFromTree(startPos);
+                String endVal = currentSheet.getDataModel().getValueFromTree(endPos);
+                treeBucket.setModel(getSpreadsheetTreeModel(currentSheet.getDataModel(), startVal, endVal, startPos, endPos));
+            }
             currentSheet.fullRefresh();
         } catch (Exception e) {
             e.printStackTrace();
@@ -1289,9 +1292,10 @@ public class AppCtrl extends CtrlBase<Component> {
         // Basic column
 
         //================================================================================
-        if(navSSBeanMap.size()==0)
-            return;
-        SpreadsheetBean<String> currentBucket = navSSBeanMap.get(chartComp25.getId());
+       // if(navSSBeanMap.size()==0)
+        //    return;
+         //SpreadsheetBean<String> currentBucket = navSSBeanMap.get(chartComp25.getId());
+         Bucket<String>  currentBucket = navSBucketMap.get(chartComp25.getId());
 
         String [] colors = {"#F6546A","#C998FD","#FF8247","#B9E4F1","#A99A91","#382755"};
         chartComp25.setType("column");
@@ -1302,12 +1306,14 @@ public class AppCtrl extends CtrlBase<Component> {
         chartComp25.setHeight("200px");
 
 
-        if(currentBucket.getChildCount() > 0)
+        //if(currentBucket.getChildCount() > 0)
+        if(currentBucket.getChildrenCount() > 0)
             xAxisLabels = "{categories: ['"+currentBucket.getChildren().get(0).getName()+"'";
         else
             xAxisLabels = "{categories: ['"+currentBucket.getName()+"'";
 
-        for(int i=1;i<currentBucket.getChildCount();i++)
+        //for(int i=1;i<currentBucket.getChildCount();i++)
+        for(int i=1;i<currentBucket.getChildrenCount();i++)
             xAxisLabels += ",'"+currentBucket.getChildren().get(i).getName()+"'";
 
         chartComp25.setxAxisOptions(xAxisLabels+"],"+
@@ -1367,10 +1373,10 @@ public class AppCtrl extends CtrlBase<Component> {
         dataChartModel25 = new SimpleExtXYModel();
         chartComp25.setModel(dataChartModel25);
 
-        for(int i = 0; i < currentBucket.getChildCount(); i++)
+        for(int i = 0; i < currentBucket.getChildrenCount(); i++)
             dataChartModel25.addValue(currentBucket.getName(), i, currentBucket.getChildren().get(i).getSize());
 
-        if(currentBucket.getChildCount()==0)
+        if(currentBucket.getChildrenCount()==0)
             dataChartModel25.addValue(currentBucket.getName(),0,currentBucket.getSize());
 
     }
@@ -1449,7 +1455,7 @@ public class AppCtrl extends CtrlBase<Component> {
             {
                 SpreadsheetBean<String> data= (SpreadsheetBean<String>)sheetTreeModel.getChild(currentNode,i).getData();
                 data.set_children();
-                navSSBeanMap.put("ch" + data.getId(), data);
+                //navSSBeanMap.put("ch" + data.getId(), data);
             }
 
             sheetTreeModel = new RODTreeModel<SpreadsheetBean<String>>(currentNode);
@@ -1464,7 +1470,7 @@ public class AppCtrl extends CtrlBase<Component> {
 
             RODTreeNode tempNode = currentNodeParent;
             SpreadsheetBean<String> data = (SpreadsheetBean<String>) currentNodeParent.getData();
-            navSSBeanMap.put("ch" + data.getId(), data);
+           // navSSBeanMap.put("ch" + data.getId(), data);
 
             while (tempNode.getParent()!=null)
                 tempNode = tempNode.getParent();

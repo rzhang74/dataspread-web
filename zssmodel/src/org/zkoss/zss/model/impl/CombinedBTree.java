@@ -12,22 +12,26 @@ import java.util.ArrayList;
 
 public class CombinedBTree{
     public BTree<CombinedStatistic> btree;
+    private int treesize;
 
     public CombinedBTree(DBContext context, String tableName, BlockStore sourceBlockStore) {
         CombinedStatistic emptyStatistic = new CombinedStatistic(new KeyStatistic(0));
         btree = new BTree<>(context, tableName, sourceBlockStore, emptyStatistic, false);
+        treesize=0;
     }
 
     public CombinedBTree(DBContext context, String tableName) {
         CombinedStatistic emptyStatistic = new CombinedStatistic(new KeyStatistic(0));
         btree = new BTree<>(context, tableName, emptyStatistic, true);
         btree.updateMaxValue(context, 0);
+        treesize=0;
     }
 
     public CombinedBTree(DBContext context, String tableName, boolean useKryo) {
         CombinedStatistic emptyStatistic = new CombinedStatistic(new KeyStatistic(0));
         btree = new BTree<>(context, tableName, emptyStatistic, useKryo);
         btree.updateMaxValue(context, 0);
+        treesize=0;
     }
 
 
@@ -87,6 +91,8 @@ public class CombinedBTree{
 
 
     public void insertIDs(DBContext context, ArrayList<CombinedStatistic> statistics, ArrayList ids) {
+        this.treesize += ids.size();
+
         btree.insertIDs(context, statistics, ids, AbstractStatistic.Type.KEY);
     }
 
@@ -98,5 +104,8 @@ public class CombinedBTree{
         btree.setB(b);
     }
 
+    public int getSize() {
+        return this.treesize;
+    }
 }
 
