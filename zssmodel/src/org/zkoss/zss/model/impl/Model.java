@@ -195,15 +195,16 @@ public abstract class Model {
                 statistics.add(new CombinedStatistic(new KeyStatistic(new String(rs.getBytes(2),"UTF-8"))));
 
                 if(count%batchSize==0) {
-                    combinedBTree.insertIDs(context,statistics,ids);
-                    connection.commit();
-                    ids = new ArrayList<>();
-                    statistics = new ArrayList<>();
-                    System.out.println(count+"  rows inserted");
-                    System.out.println("In Model: "+combinedBTree);
                     try {
                         synchronized (combinedBTree)
                         {
+                            combinedBTree.insertIDs(context,statistics,ids);
+                            connection.commit();
+                            ids = new ArrayList<>();
+                            statistics = new ArrayList<>();
+                            System.out.println(count+"  rows inserted");
+                            System.out.println("In Model: "+combinedBTree);
+
                             combinedBTree.notify();
                         }
 
@@ -215,12 +216,13 @@ public abstract class Model {
 
             if(count%batchSize!=0)
             {
-                combinedBTree.insertIDs(context,statistics,ids);
-                connection.commit();
-                System.out.println(count+"  rows inserted");
                 try {
                     synchronized (combinedBTree)
                     {
+                        combinedBTree.insertIDs(context,statistics,ids);
+                        connection.commit();
+                        System.out.println(count+"  rows inserted");
+
                         combinedBTree.notify();
                     }
                 } catch (Exception e) {

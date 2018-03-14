@@ -32,7 +32,7 @@
 											<textbox value="${each.data.summary}" readonly="true" multiline="true"/>
 										</treecell>-->
 										<treecell >
-											<!--<zhighcharts id="ch${each.data.id}" onCreate="$composer.onChartsCreate(self)"/>-->
+											<zhighcharts id="ch${each.data.id}" onCreate="$composer.onChartsCreate(self)"/>
 										</treecell>
 									</treerow>
 								</treeitem>

@@ -6,6 +6,7 @@ import org.zkoss.zss.model.impl.Model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class SpreadsheetBean<T> extends RODTreeNodeData {
     private T minValue;
@@ -49,7 +50,8 @@ public class SpreadsheetBean<T> extends RODTreeNodeData {
     }
 
     private void setId() {
-        this.id = this.name.replaceAll(" ","_");
+        //this.id = this.name.replaceAll(" ","_");
+        this.id = this.getSaltString();
     }
 
     @Override
@@ -214,5 +216,17 @@ public class SpreadsheetBean<T> extends RODTreeNodeData {
 
     public int getSize() {
         return size;
+    }
+    private String getSaltString() {
+        String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+        StringBuilder salt = new StringBuilder();
+        Random rnd = new Random();
+        while (salt.length() < 10) { // length of the random string.
+            int index = (int) (rnd.nextFloat() * SALTCHARS.length());
+            salt.append(SALTCHARS.charAt(index));
+        }
+        String saltStr = salt.toString();
+        return saltStr;
+
     }
 }
